@@ -62,12 +62,22 @@ func TestMockServer(t *testing.T) {
 	}
 }
 
+func TestRequestId(t *testing.T) {
+	c := &Client{}
+	req, err := c.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if req.Header.Get("Request-Id") == "" {
+		t.Error("Request-Id not set")
+	}
+}
+
 func TestGet(t *testing.T) {
 	expected := makeResponse(200, "{\"omg\": \"wtf\"}")
 
 	ts := httptest.NewServer(mockHandler(t, expected))
 	defer ts.Close()
-
 	c := &Client{}
 	c.URL = ts.URL
 

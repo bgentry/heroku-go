@@ -2,6 +2,7 @@ package heroku
 
 import (
 	"bytes"
+	"code.google.com/p/go-uuid/uuid"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -97,12 +98,13 @@ func (c *Client) NewRequest(method, path string, body interface{}) (*http.Reques
 	if err != nil {
 		return nil, err
 	}
-	req.SetBasicAuth(c.Username, c.Password)
+	req.Header.Set("Accept", "application/vnd.heroku+json; version=3")
+	req.Header.Set("Request-Id", uuid.New())
 	req.Header.Set("User-Agent", userAgent)
 	if ctype != "" {
 		req.Header.Set("Content-Type", ctype)
 	}
-	req.Header.Set("Accept", "application/vnd.heroku+json; version=3")
+	req.SetBasicAuth(c.Username, c.Password)
 	for _, h := range strings.Split(os.Getenv("HKHEADER"), "\n") {
 		if i := strings.Index(h, ":"); i >= 0 {
 			req.Header.Set(
