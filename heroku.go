@@ -2,7 +2,6 @@ package heroku
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -20,38 +19,47 @@ const (
 	userAgent = "heroku.go " + Version + " " + runtime.GOOS + " " + runtime.GOARCH
 )
 
-var client = &http.Client{
-	Transport: http.DefaultTransport,
+// A Client is a Heroku API client. Its zero value is a usable client that uses
+// default settings for the Heroku API. The Client has an internal HTTP client
+// (HTTP) which defaults to http.DefaultClient.
+//
+// As with all http.Clients, this Client's Transport has internal state (cached
+// HTTP connections), so Clients should be reused instead of created as needed.
+// Clients are safe for use by multiple goroutines.
+type Client struct {
+	// HTTP is the Client's internal http.Client, handling HTTP requests to the
+	// Heroku API.
+	HTTP *http.Client
+
+	// The URL of the Heroku API to communicate with. Defaults to
+	// "https://api.heroku.com".
+	URL string
+
+	// Username is the HTTP basic auth username for API calls made by this Client.
+	Username string
+
+	// Password is the HTTP basic auth password for API calls made by this Client.
+	Password string
 }
 
-var apiURL = "https://api.heroku.com"
-
-func init() {
-	if os.Getenv("HEROKU_SSL_VERIFY") == "disable" {
-		client.Transport.(*http.Transport).TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true,
-		}
-	}
+func (c *Client) Get(v interface{}, path string) error {
+	return c.APIReq(v, "GET", path, nil)
 }
 
-func Get(v interface{}, path string) error {
-	return APIReq(v, "GET", path, nil)
+func (c *Client) Patch(v interface{}, path string, body interface{}) error {
+	return c.APIReq(v, "PATCH", path, body)
 }
 
-func Patch(v interface{}, path string, body interface{}) error {
-	return APIReq(v, "PATCH", path, body)
+func (c *Client) Post(v interface{}, path string, body interface{}) error {
+	return c.APIReq(v, "POST", path, body)
 }
 
-func Post(v interface{}, path string, body interface{}) error {
-	return APIReq(v, "POST", path, body)
+func (c *Client) Put(v interface{}, path string, body interface{}) error {
+	return c.APIReq(v, "PUT", path, body)
 }
 
-func Put(v interface{}, path string, body interface{}) error {
-	return APIReq(v, "PUT", path, body)
-}
-
-func Delete(path string) error {
-	return APIReq(nil, "DELETE", path, nil)
+func (c *Client) Delete(path string) error {
+	return c.APIReq(nil, "DELETE", path, nil)
 }
 
 // Generates an HTTP request for the Heroku API, but does not
@@ -65,7 +73,7 @@ func Delete(path string) error {
 //   nil         no body
 //   io.Reader   body is sent verbatim
 //   else        body is encoded as application/json
-func NewRequest(method, path string, body interface{}) (*http.Request, error) {
+func (c *Client) NewRequest(method, path string, body interface{}) (*http.Request, error) {
 	var ctype string
 	var rbody io.Reader
 
@@ -81,11 +89,15 @@ func NewRequest(method, path string, body interface{}) (*http.Request, error) {
 		rbody = bytes.NewReader(j)
 		ctype = "application/json"
 	}
+	apiURL := strings.TrimRight(c.URL, "/")
+	if apiURL == "" {
+		apiURL = "https://api.heroku.com"
+	}
 	req, err := http.NewRequest(method, apiURL+path, rbody)
 	if err != nil {
 		return nil, err
 	}
-	req.SetBasicAuth("fakeuser", "fakepass")
+	req.SetBasicAuth(c.Username, c.Password)
 	req.Header.Set("User-Agent", userAgent)
 	if ctype != "" {
 		req.Header.Set("Content-Type", ctype)
@@ -106,12 +118,12 @@ func NewRequest(method, path string, body interface{}) (*http.Request, error) {
 // described in NewRequest(), the type of body determines how to
 // encode the request body. As described in DoReq(), the type of
 // v determines how to handle the response body.
-func APIReq(v interface{}, meth, path string, body interface{}) error {
-	req, err := NewRequest(meth, path, body)
+func (c *Client) APIReq(v interface{}, meth, path string, body interface{}) error {
+	req, err := c.NewRequest(meth, path, body)
 	if err != nil {
 		return err
 	}
-	return DoReq(req, v)
+	return c.DoReq(req, v)
 }
 
 // Submits an HTTP request, checks its response, and deserializes
@@ -122,7 +134,7 @@ func APIReq(v interface{}, meth, path string, body interface{}) error {
 //   io.Writer  body is copied directly into v
 //   else       body is decoded into v as json
 //
-func DoReq(req *http.Request, v interface{}) error {
+func (c *Client) DoReq(req *http.Request, v interface{}) error {
 	debug := os.Getenv("HKDEBUG") != ""
 	if debug {
 		dump, err := httputil.DumpRequestOut(req, true)
@@ -133,7 +145,13 @@ func DoReq(req *http.Request, v interface{}) error {
 			os.Stderr.Write([]byte{'\n', '\n'})
 		}
 	}
-	res, err := client.Do(req)
+
+	httpClient := c.HTTP
+	if httpClient == nil {
+		httpClient = http.DefaultClient
+	}
+
+	res, err := httpClient.Do(req)
 	if err != nil {
 		return err
 	}

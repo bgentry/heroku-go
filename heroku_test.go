@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 )
 
@@ -68,12 +67,14 @@ func TestGet(t *testing.T) {
 
 	ts := httptest.NewServer(mockHandler(t, expected))
 	defer ts.Close()
-	apiURL = strings.TrimRight(ts.URL, "/")
+
+	c := &Client{}
+	c.URL = ts.URL
 
 	var v struct {
 		Omg string
 	}
-	err := Get(&v, "/")
+	err := c.Get(&v, "/")
 	if err != nil {
 		t.Fatal(err)
 	}
