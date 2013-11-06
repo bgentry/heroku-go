@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	Version   = "0.1"
-	userAgent = "heroku.go " + Version + " " + runtime.GOOS + " " + runtime.GOARCH
+	Version          = "0.1"
+	DefaultUserAgent = "heroku.go " + Version + " " + runtime.GOOS + " " + runtime.GOARCH
 )
 
 // A Client is a Heroku API client. Its zero value is a usable client that uses
@@ -41,6 +41,10 @@ type Client struct {
 
 	// Password is the HTTP basic auth password for API calls made by this Client.
 	Password string
+
+	// UserAgent to be provided in API requests. Set to DefaultUserAgent if not
+	// specified.
+	UserAgent string
 }
 
 func (c *Client) Get(v interface{}, path string) error {
@@ -100,7 +104,11 @@ func (c *Client) NewRequest(method, path string, body interface{}) (*http.Reques
 	}
 	req.Header.Set("Accept", "application/vnd.heroku+json; version=3")
 	req.Header.Set("Request-Id", uuid.New())
-	req.Header.Set("User-Agent", userAgent)
+	useragent := c.UserAgent
+	if useragent == "" {
+		useragent = DefaultUserAgent
+	}
+	req.Header.Set("User-Agent", useragent)
 	if ctype != "" {
 		req.Header.Set("Content-Type", ctype)
 	}

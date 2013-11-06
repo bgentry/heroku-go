@@ -73,6 +73,28 @@ func TestRequestId(t *testing.T) {
 	}
 }
 
+func TestUserAgent(t *testing.T) {
+	c := &Client{}
+	req, err := c.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ua := req.Header.Get("User-Agent"); ua != DefaultUserAgent {
+		t.Errorf("Default User-Agent expected %q, got %q", DefaultUserAgent, ua)
+	}
+
+	// try a custom User-Agent
+	customAgent := "custom-client 2.1 " + DefaultUserAgent
+	c.UserAgent = customAgent
+	req, err = c.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ua := req.Header.Get("User-Agent"); ua != customAgent {
+		t.Errorf("User-Agent expected %q, got %q", customAgent, ua)
+	}
+}
+
 func TestGet(t *testing.T) {
 	expected := makeResponse(200, "{\"omg\": \"wtf\"}")
 
