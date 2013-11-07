@@ -73,6 +73,10 @@ func (c *Client) Delete(path string) error {
 //
 //   Accept: application/vnd.heroku+json; version=3
 //
+// The Request-Id header will be set to a random UUID. The User-Agent header
+// will be set to the Client's UserAgent, or DefaultUserAgent if UserAgent is
+// not set.
+//
 // The type of body determines how to encode the request:
 //
 //   nil         no body
@@ -84,6 +88,8 @@ func (c *Client) NewRequest(method, path string, body interface{}) (*http.Reques
 
 	switch t := body.(type) {
 	case nil:
+	case string:
+		rbody = bytes.NewBufferString(t)
 	case io.Reader:
 		rbody = t
 	default:
