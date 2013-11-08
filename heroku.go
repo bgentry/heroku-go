@@ -1,3 +1,4 @@
+// Package heroku is a client interface to the Heroku API.
 package heroku
 
 import (
@@ -17,7 +18,7 @@ import (
 
 const (
 	Version          = "0.1"
-	DefaultUserAgent = "heroku.go " + Version + " " + runtime.GOOS + " " + runtime.GOARCH
+	DefaultUserAgent = "heroku-go " + Version + " " + runtime.GOOS + " " + runtime.GOARCH
 )
 
 // A Client is a Heroku API client. Its zero value is a usable client that uses
