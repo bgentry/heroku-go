@@ -52,29 +52,32 @@ type App struct {
 
 // Create a new app.
 //
-// name, region, and stack are optional.
-func (c *Client) AppCreate(name, region, stack string) (*App, error) {
-	var body struct {
-		Name   string `json:"name,omitempty"`
-		Region string `json:"region,omitempty"`
-		Stack  string `json:"stack,omitempty"`
-	}
-	body.Name = name
-	body.Region = region
-	body.Stack = stack
+// options is a struct of the optional parameters for this call: name, region,
+// and stack.
+func (c *Client) AppCreate(options AppCreateOpts) (*App, error) {
 	var app App
-	if err := c.Post(&app, "/apps", body); err != nil {
+	if err := c.Post(&app, "/apps", options); err != nil {
 		return nil, err
 	}
 	return &app, nil
 }
 
+// AppCreateOpts is the struct of optional parameters for AppCreate
+type AppCreateOpts struct {
+	// name of app
+	Name *string `json:"name,omitempty"`
+	// identity of app region
+	Region *string `json:"region,omitempty"`
+	// identity of app stack
+	Stack *string `json:"stack,omitempty"`
+}
+
 // Info for existing app.
 //
-// nameOrId is the unique name of app or unique identifier of app
+// nameOrId is the unique name of app or unique identifier of app.
 func (c *Client) AppInfo(nameOrId string) (*App, error) {
 	var app App
-	if err := c.Get(&app, "/apps/" + nameOrId); err != nil {
+	if err := c.Get(&app, "/apps/"+nameOrId); err != nil {
 		return nil, err
 	}
 	return &app, nil
@@ -82,7 +85,29 @@ func (c *Client) AppInfo(nameOrId string) (*App, error) {
 
 // Delete an existing app.
 //
-// nameOrId is the unique name of app or unique identifier of app
+// nameOrId is the unique name of app or unique identifier of app.
 func (c *Client) AppDelete(nameOrId string) error {
 	return c.Delete("/apps/" + nameOrId)
+}
+
+// Update an existing app.
+//
+// nameOrId is the unique name of app or unique identifier of app.
+//
+// options is a struct of the optional parameters for this call: name and
+// maintenance.
+func (c *Client) AppUpdate(nameOrId string, options AppUpdateOpts) (*App, error) {
+	var app App
+	if err := c.Patch(&app, "/apps/"+nameOrId, options); err != nil {
+		return nil, err
+	}
+	return &app, nil
+}
+
+// AppUpdateOpts is the struct of optional parameters for AppUpdate
+type AppUpdateOpts struct {
+	// maintenance status of app
+	Maintenance *bool `json:"maintenance,omitempty"`
+	// name of app
+	Name *string `json:"name,omitempty"`
 }

@@ -65,35 +65,55 @@ func TestAppInfoSuccess(t *testing.T) {
 // AppCreate()
 //
 
-const appCreateRequestBody = `{
-	"name":"example",
-	"region": "us",
-	"stack": "cedar"
-}`
-
-var appCreateResponse = testnet.TestResponse{
-	Status: 201,
-	Body:   appInfoResponseBody,
-}
-var appCreateRequest = newTestRequest("POST", "/apps", appCreateRequestBody, appCreateResponse)
-
 func TestAppCreateSuccess(t *testing.T) {
-	ts, handler, c := newTestServerAndClient(t, appCreateRequest)
+	appCreateRequestBodies := []string{
+		`{}`,
+		`{"name":"example"}`,
+		`{"region":"us"}`,
+		`{"stack":"cedar"}`,
+		`{"name":"example", "region":"us", "stack":"cedar"}`,
+	}
+
+	nameval := "example"
+	regionval := "us"
+	stackval := "cedar"
+	appCreateRequestOptions := []AppCreateOpts{
+		AppCreateOpts{},
+		AppCreateOpts{Name: &nameval},
+		AppCreateOpts{Region: &regionval},
+		AppCreateOpts{Stack: &stackval},
+		AppCreateOpts{Name: &nameval, Region: &regionval, Stack: &stackval},
+	}
+
+	appCreateResponse := testnet.TestResponse{
+		Status: 201,
+		Body:   appInfoResponseBody,
+	}
+
+	reqs := make([]testnet.TestRequest, len(appCreateRequestBodies))
+	for i, body := range appCreateRequestBodies {
+		reqs[i] = newTestRequest("POST", "/apps", body, appCreateResponse)
+	}
+
+	ts, handler, c := newTestServerAndClient(t, reqs...)
 	defer ts.Close()
 
-	app, err := c.AppCreate("example", "us", "cedar")
-	if err != nil {
-		t.Fatal(err)
+	for i := range appCreateRequestBodies {
+		app, err := c.AppCreate(appCreateRequestOptions[i])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if app == nil {
+			t.Fatal("no app object returned")
+		}
+		testStringsEqual(t, "app.Name", "example", app.Name)
+		testStringsEqual(t, "app.Region.Name", "us", app.Region.Name)
+		testStringsEqual(t, "app.Stack.Name", "cedar", app.Stack.Name)
 	}
+
 	if !handler.AllRequestsCalled() {
 		t.Errorf("not all expected requests were called")
 	}
-	if app == nil {
-		t.Fatal("no app object returned")
-	}
-	testStringsEqual(t, "app.Name", "example", app.Name)
-	testStringsEqual(t, "app.Region.Name", "us", app.Region.Name)
-	testStringsEqual(t, "app.Stack.Name", "cedar", app.Stack.Name)
 }
 
 //
@@ -114,6 +134,56 @@ func TestAppDeleteSuccess(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if !handler.AllRequestsCalled() {
+		t.Errorf("not all expected requests were called")
+	}
+}
+
+//
+// AppUpdate()
+//
+
+func TestAppUpdateSuccess(t *testing.T) {
+	appUpdateRequestBodies := []string{
+		`{"maintenance":true}`,
+		`{"name":"example"}`,
+		`{"maintenance":true, "name":"example"}`,
+	}
+
+	maintval := true
+	nameval := "example"
+	appUpdateRequestOptions := []AppUpdateOpts{
+		AppUpdateOpts{Maintenance: &maintval},
+		AppUpdateOpts{Name: &nameval},
+		AppUpdateOpts{Maintenance: &maintval, Name: &nameval},
+	}
+
+	appUpdateResponse := testnet.TestResponse{
+		Status: 201,
+		Body:   appInfoResponseBody,
+	}
+
+	reqs := make([]testnet.TestRequest, len(appUpdateRequestBodies))
+	for i, body := range appUpdateRequestBodies {
+		reqs[i] = newTestRequest("PATCH", "/apps/example", body, appUpdateResponse)
+	}
+
+	ts, handler, c := newTestServerAndClient(t, reqs...)
+	defer ts.Close()
+
+	for i := range appUpdateRequestBodies {
+		app, err := c.AppUpdate("example", appUpdateRequestOptions[i])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if app == nil {
+			t.Fatal("no app object returned")
+		}
+		testStringsEqual(t, "app.Name", "example", app.Name)
+		testStringsEqual(t, "app.Region.Name", "us", app.Region.Name)
+		testStringsEqual(t, "app.Stack.Name", "cedar", app.Stack.Name)
+	}
+
 	if !handler.AllRequestsCalled() {
 		t.Errorf("not all expected requests were called")
 	}
