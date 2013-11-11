@@ -210,3 +210,32 @@ func checkResp(res *http.Response) error {
 	}
 	return nil
 }
+
+type ListRange struct {
+	Field      string
+	Max        int
+	Descending bool
+	FirstId    string
+	LastId     string
+}
+
+func (r *ListRange) SetHeader(req *http.Request) {
+	var hdrval string
+	if r.Field != "" {
+		hdrval += r.Field + " "
+	}
+	hdrval += r.FirstId + ".." + r.LastId
+	if r.Max != 0 {
+		hdrval += fmt.Sprintf("; max=%d", r.Max)
+		if r.Descending {
+			hdrval += ", "
+		}
+	}
+
+	if r.Descending {
+		hdrval += ", order=desc"
+	}
+
+	req.Header.Set("Range", hdrval)
+	return
+}
