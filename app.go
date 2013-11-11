@@ -59,10 +59,7 @@ type App struct {
 // and stack.
 func (c *Client) AppCreate(options AppCreateOpts) (*App, error) {
 	var app App
-	if err := c.Post(&app, "/apps", options); err != nil {
-		return nil, err
-	}
-	return &app, nil
+	return &app, c.Post(&app, "/apps", options)
 }
 
 // AppCreateOpts holds the optional parameters for AppCreate
@@ -80,10 +77,7 @@ type AppCreateOpts struct {
 // nameOrId is the unique name of app or unique identifier of app.
 func (c *Client) AppInfo(nameOrId string) (*App, error) {
 	var app App
-	if err := c.Get(&app, "/apps/"+nameOrId); err != nil {
-		return nil, err
-	}
-	return &app, nil
+	return &app, c.Get(&app, "/apps/"+nameOrId)
 }
 
 // Delete an existing app.
@@ -119,10 +113,7 @@ func (c *Client) AppList(lr *ListRange) ([]App, error) {
 // maintenance.
 func (c *Client) AppUpdate(nameOrId string, options AppUpdateOpts) (*App, error) {
 	var app App
-	if err := c.Patch(&app, "/apps/"+nameOrId, options); err != nil {
-		return nil, err
-	}
-	return &app, nil
+	return &app, c.Patch(&app, "/apps/"+nameOrId, options)
 }
 
 // AppUpdateOpts holds the optional parameters for AppUpdate
