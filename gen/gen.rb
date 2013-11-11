@@ -35,7 +35,7 @@ type <%= resource_class %> struct {
 <%- definition["links"].each do |link| %>
   <%- func_name = titlecase(key.downcase. + "-" + reltranslate(link["rel"])) %>
   <%- func_args = [] %>
-  <%- func_args << parent_resource_instance + 'Identity string' %>
+  <%- func_args << (parent_resource_instance + 'Identity string') if parent_resource_instance %>
   <%- func_args << func_args_from_model_and_link_rel(key, link["rel"]) %>
   <%- return_values = returnvals(titlecase(key), link["rel"]) %>
   <%- path = link['href'].gsub("{(%2Fschema%2F\#{key}%23%2Fdefinitions%2Fidentity)}", '"+' + resource_instance + 'Identity') %>
@@ -60,7 +60,19 @@ type <%= resource_class %> struct {
     <%- end %>
   }
 
-  // TODO: add option structs
+  <%- if %w{create update}.include?(link["rel"]) && link["schema"] && link["schema"]["properties"] %>
+    // <%= func_name %>Opts holds the optional parameters for <%= func_name %>
+    type <%= func_name %>Opts struct {
+      <%- link["schema"]["properties"].each do |propname, prophash| %>
+        <%- if definition['properties'][propname] && definition['properties'][propname]['description'] %>
+          // <%= definition['properties'][propname]['description'] %>
+        <%- else %>
+          // <%= definition["definitions"][propname]["description"] %>
+        <%- end %>
+        <%= titlecase(propname) %> <%= type_for_link_opts_field(definition, link, propname) %> `json:"<%= propname %>,omitempty"`
+      <%- end %>
+    }
+  <%- end %>
 
 <%- end %>
 RESOURCE_TEMPLATE
@@ -87,6 +99,39 @@ def titlecase(str)
   str.gsub('_','-').split('-').map {|k| k[0...1].upcase + k[1..-1]}.join
 end
 
+def type_for_link_opts_field(definition, link, propname)
+  inline_object = false
+  typedef = if definition["definitions"][propname]
+              inline_object = true
+              definition["definitions"][propname]
+            else definition["properties"][propname]
+              definition['properties'][propname]
+            end
+
+  tname = ""
+
+  if inline_object
+    types = typedef["type"]
+    types.delete("null")
+    tname = case types.first
+            when "boolean"
+              "bool"
+            when "integer"
+              "int"
+            when "string"
+              format = typedef["format"]
+              format && format == "date-time" ? "time.Time" : "string"
+            when "object"
+              "map[string]string"
+            else
+              types.first
+            end
+  else
+    tname = "string"
+  end
+  "*#{tname}"
+end
+
 def type_for_prop(definition, propname)
   nullable = false
   tname = ""
@@ -105,7 +150,8 @@ def type_for_prop(definition, propname)
               types.first
             end
   else
-    tname = titlecase(propname)
+    tname = definition["properties"][propname]["properties"].first[1]["$ref"].match(/\/schema\/(\w+)#/)[1]
+    tname = titlecase(tname)
   end
   "#{'*' if nullable}#{tname}"
 end
@@ -133,12 +179,15 @@ def returnvals(resclass, relname)
 end
 
 def func_args_from_model_and_link_rel(model, rel)
-  if %w{create update}.include?(rel)
+  case rel
+  when "create"
     "options #{titlecase(model)}#{rel.capitalize}Opts"
-  elsif %w{destroy self}.include?(rel)
+  when "update"
+    "#{model}Identity string, options #{titlecase(model)}#{rel.capitalize}Opts"
+  when "destroy", "self"
     model + "Identity string"
-  elsif rel == "instances"
-   "lr ListRange"
+  when "instances"
+   "lr *ListRange"
   else
     nil
   end
