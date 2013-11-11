@@ -120,51 +120,63 @@ func TestAppListSuccess(t *testing.T) {
 // AppCreate()
 //
 
-func TestAppCreateSuccess(t *testing.T) {
-	appCreateRequestBodies := []string{
-		`{}`,
-		`{"name":"example"}`,
-		`{"region":"us"}`,
-		`{"stack":"cedar"}`,
-		`{"name":"example", "region":"us", "stack":"cedar"}`,
-	}
-
+func TestAppCreateMarshal(t *testing.T) {
 	nameval := "example"
 	regionval := "us"
 	stackval := "cedar"
-	appCreateRequestOptions := []AppCreateOpts{
-		AppCreateOpts{},
-		AppCreateOpts{Name: &nameval},
-		AppCreateOpts{Region: &regionval},
-		AppCreateOpts{Stack: &stackval},
-		AppCreateOpts{Name: &nameval, Region: &regionval, Stack: &stackval},
+
+	var marshalTests = []struct {
+		values AppCreateOpts
+		output string
+	}{
+		{AppCreateOpts{}, `{}`},
+		{AppCreateOpts{Name: &nameval}, `{"name":"example"}`},
+		{AppCreateOpts{Region: &regionval}, `{"region":"us"}`},
+		{AppCreateOpts{Stack: &stackval}, `{"stack":"cedar"}`},
+		{AppCreateOpts{
+			Name:   &nameval,
+			Region: &regionval,
+			Stack:  &stackval,
+		}, `{"name":"example","region":"us","stack":"cedar"}`},
 	}
 
+	for _, body := range marshalTests {
+		bytes, err := json.Marshal(body.values)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(bytes) != body.output {
+			t.Errorf("expected %s, got %s", body.output, string(bytes))
+		}
+	}
+}
+
+func TestAppCreateSuccess(t *testing.T) {
 	appCreateResponse := testnet.TestResponse{
 		Status: 201,
 		Body:   appMarshaled,
 	}
+	appCreateRequestBody := `{"name":"example", "region":"us", "stack":"cedar"}`
+	appCreateRequest := newTestRequest("POST", "/apps", appCreateRequestBody, appCreateResponse)
 
-	reqs := make([]testnet.TestRequest, len(appCreateRequestBodies))
-	for i, body := range appCreateRequestBodies {
-		reqs[i] = newTestRequest("POST", "/apps", body, appCreateResponse)
-	}
+	nameval := "example"
+	regionval := "us"
+	stackval := "cedar"
+	appCreateRequestOptions := AppCreateOpts{Name: &nameval, Region: &regionval, Stack: &stackval}
 
-	ts, handler, c := newTestServerAndClient(t, reqs...)
+	ts, handler, c := newTestServerAndClient(t, appCreateRequest)
 	defer ts.Close()
 
-	for i := range appCreateRequestBodies {
-		app, err := c.AppCreate(appCreateRequestOptions[i])
-		if err != nil {
-			t.Fatal(err)
-		}
-		if app == nil {
-			t.Fatal("no app object returned")
-		}
-		var emptyapp App
-		if *app == emptyapp {
-			t.Errorf("returned app is empty")
-		}
+	app, err := c.AppCreate(appCreateRequestOptions)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if app == nil {
+		t.Fatal("no app object returned")
+	}
+	var emptyapp App
+	if *app == emptyapp {
+		t.Errorf("returned app is empty")
 	}
 
 	if !handler.AllRequestsCalled() {
@@ -199,46 +211,55 @@ func TestAppDeleteSuccess(t *testing.T) {
 // AppUpdate()
 //
 
-func TestAppUpdateSuccess(t *testing.T) {
-	appUpdateRequestBodies := []string{
-		`{"maintenance":true}`,
-		`{"name":"example"}`,
-		`{"maintenance":true, "name":"example"}`,
-	}
-
+func TestAppUpdateMarshal(t *testing.T) {
 	maintval := true
 	nameval := "example"
-	appUpdateRequestOptions := []AppUpdateOpts{
-		AppUpdateOpts{Maintenance: &maintval},
-		AppUpdateOpts{Name: &nameval},
-		AppUpdateOpts{Maintenance: &maintval, Name: &nameval},
+
+	var marshalTests = []struct {
+		values AppUpdateOpts
+		output string
+	}{
+		{AppUpdateOpts{Maintenance: &maintval}, `{"maintenance":true}`},
+		{AppUpdateOpts{Name: &nameval}, `{"name":"example"}`},
+		{AppUpdateOpts{Maintenance: &maintval, Name: &nameval}, `{"maintenance":true,"name":"example"}`},
 	}
 
+	for _, body := range marshalTests {
+		bytes, err := json.Marshal(body.values)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(bytes) != body.output {
+			t.Errorf("expected %s, got %s", body.output, string(bytes))
+		}
+	}
+}
+
+func TestAppUpdateSuccess(t *testing.T) {
 	appUpdateResponse := testnet.TestResponse{
 		Status: 201,
 		Body:   appMarshaled,
 	}
+	appUpdateRequestBody := `{"maintenance":true, "name":"example"}`
+	appUpdateRequest := newTestRequest("PATCH", "/apps/example", appUpdateRequestBody, appUpdateResponse)
 
-	reqs := make([]testnet.TestRequest, len(appUpdateRequestBodies))
-	for i, body := range appUpdateRequestBodies {
-		reqs[i] = newTestRequest("PATCH", "/apps/example", body, appUpdateResponse)
-	}
+	maintval := true
+	nameval := "example"
+	appUpdateRequestOptions := AppUpdateOpts{Maintenance: &maintval, Name: &nameval}
 
-	ts, handler, c := newTestServerAndClient(t, reqs...)
+	ts, handler, c := newTestServerAndClient(t, appUpdateRequest)
 	defer ts.Close()
 
-	for i := range appUpdateRequestBodies {
-		app, err := c.AppUpdate("example", appUpdateRequestOptions[i])
-		if err != nil {
-			t.Fatal(err)
-		}
-		if app == nil {
-			t.Fatal("no app object returned")
-		}
-		var emptyapp App
-		if *app == emptyapp {
-			t.Errorf("returned app is empty")
-		}
+	app, err := c.AppUpdate("example", appUpdateRequestOptions)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if app == nil {
+		t.Fatal("no app object returned")
+	}
+	var emptyapp App
+	if *app == emptyapp {
+		t.Errorf("returned app is empty")
 	}
 
 	if !handler.AllRequestsCalled() {
