@@ -72,19 +72,19 @@ type AppCreateOpts struct {
 	Stack *string `json:"stack,omitempty"`
 }
 
-// Info for existing app.
-//
-// nameOrId is the unique name of app or unique identifier of app.
-func (c *Client) AppInfo(nameOrId string) (*App, error) {
-	var app App
-	return &app, c.Get(&app, "/apps/"+nameOrId)
-}
-
 // Delete an existing app.
 //
-// nameOrId is the unique name of app or unique identifier of app.
-func (c *Client) AppDelete(nameOrId string) error {
-	return c.Delete("/apps/" + nameOrId)
+// appIdentity is the unique name of app or unique identifier of app.
+func (c *Client) AppDelete(appIdentity string) error {
+	return c.Delete("/apps/" + appIdentity)
+}
+
+// Info for existing app.
+//
+// appIdentity is the unique name of app or unique identifier of app.
+func (c *Client) AppInfo(appIdentity string) (*App, error) {
+	var app App
+	return &app, c.Get(&app, "/apps/"+appIdentity)
 }
 
 // List existing apps.
@@ -107,13 +107,13 @@ func (c *Client) AppList(lr *ListRange) ([]App, error) {
 
 // Update an existing app.
 //
-// nameOrId is the unique name of app or unique identifier of app.
+// appIdentity is the unique name of app or unique identifier of app.
 //
 // options is a struct of the optional parameters for this call: name and
 // maintenance.
-func (c *Client) AppUpdate(nameOrId string, options AppUpdateOpts) (*App, error) {
+func (c *Client) AppUpdate(appIdentity string, options AppUpdateOpts) (*App, error) {
 	var app App
-	return &app, c.Patch(&app, "/apps/"+nameOrId, options)
+	return &app, c.Patch(&app, "/apps/"+appIdentity, options)
 }
 
 // AppUpdateOpts holds the optional parameters for AppUpdate
