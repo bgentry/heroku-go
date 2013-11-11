@@ -219,20 +219,20 @@ type ListRange struct {
 	LastId     string
 }
 
-func (r *ListRange) SetHeader(req *http.Request) {
+func (lr *ListRange) SetHeader(req *http.Request) {
 	var hdrval string
-	if r.Field != "" {
-		hdrval += r.Field + " "
+	if lr.Field != "" {
+		hdrval += lr.Field + " "
 	}
-	hdrval += r.FirstId + ".." + r.LastId
-	if r.Max != 0 {
-		hdrval += fmt.Sprintf("; max=%d", r.Max)
-		if r.Descending {
+	hdrval += lr.FirstId + ".." + lr.LastId
+	if lr.Max != 0 {
+		hdrval += fmt.Sprintf("; max=%d", lr.Max)
+		if lr.Descending {
 			hdrval += ", "
 		}
 	}
 
-	if r.Descending {
+	if lr.Descending {
 		hdrval += ", order=desc"
 	}
 
