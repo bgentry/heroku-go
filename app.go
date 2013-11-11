@@ -93,6 +93,24 @@ func (c *Client) AppDelete(nameOrId string) error {
 	return c.Delete("/apps/" + nameOrId)
 }
 
+// List existing apps.
+//
+// lr is an optional ListRange that sets the Range options for the paginated
+// list of results.
+func (c *Client) AppList(lr *ListRange) ([]App, error) {
+	req, err := c.NewRequest("GET", "/apps", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if lr != nil {
+		lr.SetHeader(req)
+	}
+
+	var apps []App
+	return apps, c.DoReq(req, &apps)
+}
+
 // Update an existing app.
 //
 // nameOrId is the unique name of app or unique identifier of app.

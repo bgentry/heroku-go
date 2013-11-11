@@ -63,6 +63,40 @@ func TestAppInfoSuccess(t *testing.T) {
 }
 
 //
+// AppList()
+//
+
+var appListResponse = testnet.TestResponse{
+	Status: 200,
+	Body:   "[" + appInfoResponseBody + "]",
+}
+var appListRequest = newTestRequest("GET", "/apps", "", appListResponse)
+
+func TestAppListSuccess(t *testing.T) {
+	appListRequest.Header.Set("Range", "..; max=1")
+
+	ts, handler, c := newTestServerAndClient(t, appListRequest)
+	defer ts.Close()
+
+	lr := ListRange{Max: 1}
+	apps, err := c.AppList(&lr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !handler.AllRequestsCalled() {
+		t.Errorf("not all expected requests were called")
+	}
+	if len(apps) != 1 {
+		t.Fatalf("expected 1 app, got %d", len(apps))
+	}
+	app := apps[0]
+	testStringsEqual(t, "app.Name", "example", app.Name)
+	testStringsEqual(t, "app.Region.Name", "us", app.Region.Name)
+	testStringsEqual(t, "app.Stack.Name", "cedar", app.Stack.Name)
+	testStringsEqual(t, "app.Owner.Email", "username@example.com", app.Owner.Email)
+}
+
+//
 // AppCreate()
 //
 
