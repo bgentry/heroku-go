@@ -45,8 +45,13 @@ type <%= resource_class %> struct {
   <%- path = ensure_balanced_end_quote(ensure_open_quote(path)) %>
 
   // <%= link["description"] %>
-  //
-  // TODO: add help text for function args
+  <%- func_arg_comments = [] %>
+  <%- func_arg_comments << (parent_resource_instance + "Identity is the unique identifier of the " + key + "'s " + parent_resource_instance + ".") if parent_resource_instance %>
+  <%- func_arg_comments += func_arg_comments_from_model_and_link_rel(key, link["rel"]) %>
+  <%- func_arg_comments.each do |comment| %>
+    //
+    // <%= comment %>
+  <%- end %>
   func (c *Client) <%= func_name + "(" + func_args.compact.join(', ') %>) <%= return_values %> {
     <%- case link["rel"] %>
     <%- when "create" %>
@@ -202,9 +207,25 @@ def func_args_from_model_and_link_rel(model, rel)
   when "destroy", "self"
     model + "Identity string"
   when "instances"
-   "lr *ListRange"
+    "lr *ListRange"
   else
     nil
+  end
+end
+
+def func_arg_comments_from_model_and_link_rel(model, rel)
+  case rel
+  when "create"
+    ["options is the struct of optional parameters for this call."]
+  when "update"
+    ["#{model}Identity is the unique identifier of the #{model}.",
+     "options is the struct of optional parameters for this call."]
+  when "destroy", "self"
+    ["#{model}Identity is the unique identifier of the #{model}."]
+  when "instances"
+    ["lr is an optional ListRange that sets the Range options for the paginated list of results."]
+  else
+    []
   end
 end
 
