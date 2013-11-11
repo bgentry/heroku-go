@@ -8,10 +8,10 @@ import (
 // Heroku.
 type App struct {
 	// when app was archived
-	ArchivedAt time.Time `json:"archived_at"`
+	ArchivedAt *time.Time `json:"archived_at"`
 
 	// description from buildpack of app
-	BuildpackProvidedDescription string `json:"buildpack_provided_description"`
+	BuildpackProvidedDescription *string `json:"buildpack_provided_description"`
 
 	// when app was created
 	CreatedAt time.Time `json:"created_at"`
@@ -35,13 +35,13 @@ type App struct {
 	Region Region `json:"region"`
 
 	// when app was released
-	ReleasedAt time.Time `json:"released_at"`
+	ReleasedAt *time.Time `json:"released_at"`
 
 	// git repo size in bytes of app
-	RepoSize int `json:"repo_size"`
+	RepoSize *int `json:"repo_size"`
 
 	// slug size in bytes of app
-	SlugSize int `json:"slug_size"`
+	SlugSize *int `json:"slug_size"`
 
 	// identity of app stack
 	Stack Stack `json:"stack"`

@@ -1,15 +1,17 @@
 package heroku
 
 import (
+	"encoding/json"
 	"github.com/bgentry/testnet"
 	"testing"
+	"time"
 )
 
 //
 // AppInfo()
 //
 
-const appInfoResponseBody = `{
+const appMarshaled = `{
 	"archived_at": "2012-01-01T12:00:00Z",
 	"buildpack_provided_description": "Ruby/Rack",
 	"created_at": "2012-01-01T12:00:00Z",
@@ -36,9 +38,28 @@ const appInfoResponseBody = `{
 	"web_url": "http://example.herokuapp.com"
 }`
 
+func TestAppUnmarshal(t *testing.T) {
+	var app App
+	err := json.Unmarshal([]byte(appMarshaled), &app)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if app.ArchivedAt == nil {
+		t.Error("expected ArchivedAt to be set, was nil")
+	} else if *app.ArchivedAt != time.Unix(int64(1325419200), int64(0)).UTC() {
+		t.Errorf("expected ArchivedAt to be 2012-01-01T12:00:00Z, was %s", *app.ArchivedAt)
+	}
+	testStringsEqual(t, "app.Id", "01234567-89ab-cdef-0123-456789abcdef", app.Id)
+	testStringsEqual(t, "app.Name", "example", app.Name)
+	testStringsEqual(t, "app.Owner.Email", "username@example.com", app.Owner.Email)
+	testStringsEqual(t, "app.Region.Name", "us", app.Region.Name)
+	testStringsEqual(t, "app.Stack.Name", "cedar", app.Stack.Name)
+}
+
 var appInfoResponse = testnet.TestResponse{
 	Status: 200,
-	Body:   appInfoResponseBody,
+	Body:   appMarshaled,
 }
 var appInfoRequest = newTestRequest("GET", "/apps/example", "", appInfoResponse)
 
@@ -56,10 +77,10 @@ func TestAppInfoSuccess(t *testing.T) {
 	if app == nil {
 		t.Fatal("no app object returned")
 	}
-	testStringsEqual(t, "app.Name", "example", app.Name)
-	testStringsEqual(t, "app.Region.Name", "us", app.Region.Name)
-	testStringsEqual(t, "app.Stack.Name", "cedar", app.Stack.Name)
-	testStringsEqual(t, "app.Owner.Email", "username@example.com", app.Owner.Email)
+	var emptyapp App
+	if *app == emptyapp {
+		t.Errorf("returned app is empty")
+	}
 }
 
 //
@@ -68,7 +89,7 @@ func TestAppInfoSuccess(t *testing.T) {
 
 var appListResponse = testnet.TestResponse{
 	Status: 200,
-	Body:   "[" + appInfoResponseBody + "]",
+	Body:   "[" + appMarshaled + "]",
 }
 var appListRequest = newTestRequest("GET", "/apps", "", appListResponse)
 
@@ -89,11 +110,10 @@ func TestAppListSuccess(t *testing.T) {
 	if len(apps) != 1 {
 		t.Fatalf("expected 1 app, got %d", len(apps))
 	}
-	app := apps[0]
-	testStringsEqual(t, "app.Name", "example", app.Name)
-	testStringsEqual(t, "app.Region.Name", "us", app.Region.Name)
-	testStringsEqual(t, "app.Stack.Name", "cedar", app.Stack.Name)
-	testStringsEqual(t, "app.Owner.Email", "username@example.com", app.Owner.Email)
+	var emptyapp App
+	if apps[0] == emptyapp {
+		t.Errorf("returned app is empty")
+	}
 }
 
 //
@@ -122,7 +142,7 @@ func TestAppCreateSuccess(t *testing.T) {
 
 	appCreateResponse := testnet.TestResponse{
 		Status: 201,
-		Body:   appInfoResponseBody,
+		Body:   appMarshaled,
 	}
 
 	reqs := make([]testnet.TestRequest, len(appCreateRequestBodies))
@@ -141,9 +161,10 @@ func TestAppCreateSuccess(t *testing.T) {
 		if app == nil {
 			t.Fatal("no app object returned")
 		}
-		testStringsEqual(t, "app.Name", "example", app.Name)
-		testStringsEqual(t, "app.Region.Name", "us", app.Region.Name)
-		testStringsEqual(t, "app.Stack.Name", "cedar", app.Stack.Name)
+		var emptyapp App
+		if *app == emptyapp {
+			t.Errorf("returned app is empty")
+		}
 	}
 
 	if !handler.AllRequestsCalled() {
@@ -157,7 +178,7 @@ func TestAppCreateSuccess(t *testing.T) {
 
 var appDeleteResponse = testnet.TestResponse{
 	Status: 200,
-	Body:   appInfoResponseBody,
+	Body:   appMarshaled,
 }
 var appDeleteRequest = newTestRequest("DELETE", "/apps/example", "", appDeleteResponse)
 
@@ -195,7 +216,7 @@ func TestAppUpdateSuccess(t *testing.T) {
 
 	appUpdateResponse := testnet.TestResponse{
 		Status: 201,
-		Body:   appInfoResponseBody,
+		Body:   appMarshaled,
 	}
 
 	reqs := make([]testnet.TestRequest, len(appUpdateRequestBodies))
@@ -214,9 +235,10 @@ func TestAppUpdateSuccess(t *testing.T) {
 		if app == nil {
 			t.Fatal("no app object returned")
 		}
-		testStringsEqual(t, "app.Name", "example", app.Name)
-		testStringsEqual(t, "app.Region.Name", "us", app.Region.Name)
-		testStringsEqual(t, "app.Stack.Name", "cedar", app.Stack.Name)
+		var emptyapp App
+		if *app == emptyapp {
+			t.Errorf("returned app is empty")
+		}
 	}
 
 	if !handler.AllRequestsCalled() {
