@@ -57,6 +57,21 @@ type <%= resource_class %> struct {
       return &<%= key %>, c.Get(&<%= key %>, <%= path %>)
     <%- when "destroy" %>
       return c.Delete(<%= path %>)
+    <%- when "update" %>
+      var <%= key %> <%= titlecase(key) %>
+      return &<%= key %>, c.Patch(&<%= key %>, <%= path %>, options)
+    <%- when "instances" %>
+      req, err := c.NewRequest("GET", <%= path %>, nil)
+      if err != nil {
+        return nil, err
+      }
+
+      if lr != nil {
+        lr.SetHeader(req)
+      }
+
+      var <%=key %>s []<%= titlecase(key) %>
+      return <%=key %>s, c.DoReq(req, &<%=key %>s)
     <%- end %>
   }
 
