@@ -59,6 +59,7 @@ func TestAppInfoSuccess(t *testing.T) {
 	testStringsEqual(t, "app.Name", "example", app.Name)
 	testStringsEqual(t, "app.Region.Name", "us", app.Region.Name)
 	testStringsEqual(t, "app.Stack.Name", "cedar", app.Stack.Name)
+	testStringsEqual(t, "app.Owner.Email", "username@example.com", app.Owner.Email)
 }
 
 //

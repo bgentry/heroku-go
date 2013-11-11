@@ -28,6 +28,9 @@ type App struct {
 	// unique name of app
 	Name string `json:"name"`
 
+	// identity of app owner
+	Owner Account `json:"owner"`
+
 	// identity of app region
 	Region Region `json:"region"`
 
@@ -62,7 +65,7 @@ func (c *Client) AppCreate(options AppCreateOpts) (*App, error) {
 	return &app, nil
 }
 
-// AppCreateOpts is the struct of optional parameters for AppCreate
+// AppCreateOpts holds the optional parameters for AppCreate
 type AppCreateOpts struct {
 	// name of app
 	Name *string `json:"name,omitempty"`
@@ -104,7 +107,7 @@ func (c *Client) AppUpdate(nameOrId string, options AppUpdateOpts) (*App, error)
 	return &app, nil
 }
 
-// AppUpdateOpts is the struct of optional parameters for AppUpdate
+// AppUpdateOpts holds the optional parameters for AppUpdate
 type AppUpdateOpts struct {
 	// maintenance status of app
 	Maintenance *bool `json:"maintenance,omitempty"`
