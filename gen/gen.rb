@@ -33,7 +33,7 @@ type <%= resource_class %> struct {
 }
 
 <%- definition["links"].each do |link| %>
-  <%- func_name = titlecase(key.downcase. + "-" + reltranslate(link["rel"])) %>
+  <%- func_name = titlecase(key.downcase. + "-" + link["title"]) %>
   <%- func_args = [] %>
   <%- func_args << (parent_resource_instance + 'Identity string') if parent_resource_instance %>
   <%- func_args << func_args_from_model_and_link_rel(key, link["rel"]) %>
@@ -116,7 +116,7 @@ def ensure_balanced_end_quote(str)
 end
 
 def titlecase(str)
-  str.gsub('_','-').split('-').map {|k| k[0...1].upcase + k[1..-1]}.join
+  str.gsub('_','-').gsub(' ','-').split('-').map {|k| k[0...1].upcase + k[1..-1]}.join
 end
 
 def type_for_link_opts_field(definition, link, propname)
@@ -176,17 +176,6 @@ def type_for_prop(definition, propname)
   "#{'*' if nullable}#{tname}"
 end
 
-def reltranslate(relname)
-  case relname
-  when "self"
-    "info"
-  when "instances"
-    "list"
-  else
-    relname
-  end
-end
-
 def returnvals(resclass, relname)
   case relname
   when "destroy"
@@ -233,7 +222,7 @@ def resource_instance_from_model(modelname)
   modelname.downcase.split('-').join('_')
 end
 
-schema_path = File.expand_path("./#{modelname}.json")
+schema_path = File.expand_path("./schema/#{modelname}.json")
 data = MultiJson.load(File.read(schema_path))
 
 if data['links'].empty?
