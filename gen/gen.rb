@@ -36,7 +36,7 @@ type <%= resource_class %> struct {
   <%- func_name = titlecase(key.downcase. + "-" + link["title"]) %>
   <%- func_args = [] %>
   <%- func_args << (parent_resource_instance + 'Identity string') if parent_resource_instance %>
-  <%- func_args << func_args_from_model_and_link_rel(key, link["rel"]) %>
+  <%- func_args += func_args_from_model_and_link(key, link["rel"]) %>
   <%- return_values = returnvals(titlecase(key), link["rel"]) %>
   <%- path = link['href'].gsub("{(%2Fschema%2F\#{key}%23%2Fdefinitions%2Fidentity)}", '"+' + resource_instance + 'Identity') %>
   <%- if parent_resource_instance %>
@@ -47,12 +47,12 @@ type <%= resource_class %> struct {
   // <%= link["description"] %>
   <%- func_arg_comments = [] %>
   <%- func_arg_comments << (parent_resource_instance + "Identity is the unique identifier of the " + key + "'s " + parent_resource_instance + ".") if parent_resource_instance %>
-  <%- func_arg_comments += func_arg_comments_from_model_and_link_rel(key, link["rel"]) %>
+  <%- func_arg_comments += func_arg_comments_from_model_and_link(key, link["rel"]) %>
   <%- func_arg_comments.each do |comment| %>
     //
     // <%= comment %>
   <%- end %>
-  func (c *Client) <%= func_name + "(" + func_args.compact.join(', ') %>) <%= return_values %> {
+  func (c *Client) <%= func_name + "(" + func_args.join(', ') %>) <%= return_values %> {
     <%- case link["rel"] %>
     <%- when "create" %>
       var <%= key %> <%= titlecase(key) %>
@@ -187,22 +187,24 @@ def returnvals(resclass, relname)
   end
 end
 
-def func_args_from_model_and_link_rel(model, rel)
+def func_args_from_model_and_link(model, link)
+  rel = link["rel"]
   case rel
   when "create"
-    "options #{titlecase(model)}#{rel.capitalize}Opts"
+    ["options #{titlecase(model)}#{rel.capitalize}Opts"]
   when "update"
-    "#{model}Identity string, options #{titlecase(model)}#{rel.capitalize}Opts"
+    ["#{model}Identity string", "options #{titlecase(model)}#{rel.capitalize}Opts"]
   when "destroy", "self"
-    model + "Identity string"
+    ["#{model}Identity string"]
   when "instances"
-    "lr *ListRange"
+    ["lr *ListRange"]
   else
-    nil
+    []
   end
 end
 
-def func_arg_comments_from_model_and_link_rel(model, rel)
+def func_arg_comments_from_model_and_link(model, link)
+  rel = link["rel"]
   case rel
   when "create"
     ["options is the struct of optional parameters for this call."]
