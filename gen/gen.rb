@@ -35,36 +35,50 @@ type <%= resource_class %> struct {
 <%- definition["links"].each do |link| %>
   <%- func_name = titlecase(key.downcase. + "-" + link["title"]) %>
   <%- func_args = [] %>
-  <%- func_args << (parent_resource_instance + 'Identity string') if parent_resource_instance %>
-  <%- func_args += func_args_from_model_and_link(key, link["rel"]) %>
+  <%- func_args << (variablecase(parent_resource_instance) + 'Identity string') if parent_resource_instance %>
+  <%- func_args += func_args_from_model_and_link(definition, key, link) %>
   <%- return_values = returnvals(titlecase(key), link["rel"]) %>
-  <%- path = link['href'].gsub("{(%2Fschema%2F\#{key}%23%2Fdefinitions%2Fidentity)}", '"+' + resource_instance + 'Identity') %>
+  <%- path = link['href'].gsub("{(%2Fschema%2F\#{key}%23%2Fdefinitions%2Fidentity)}", '"+' + variablecase(resource_instance) + 'Identity') %>
   <%- if parent_resource_instance %>
-    <%- path = path.gsub("{(%2Fschema%2F" + parent_resource_instance + "%23%2Fdefinitions%2Fidentity)}", '" + ' + parent_resource_instance + 'Identity + "') %>
+    <%- path = path.gsub("{(%2Fschema%2F" + parent_resource_instance + "%23%2Fdefinitions%2Fidentity)}", '" + ' + variablecase(parent_resource_instance) + 'Identity + "') %>
   <%- end %>
   <%- path = ensure_balanced_end_quote(ensure_open_quote(path)) %>
 
   // <%= link["description"] %>
   <%- func_arg_comments = [] %>
-  <%- func_arg_comments << (parent_resource_instance + "Identity is the unique identifier of the " + key + "'s " + parent_resource_instance + ".") if parent_resource_instance %>
-  <%- func_arg_comments += func_arg_comments_from_model_and_link(key, link["rel"]) %>
-  <%- func_arg_comments.each do |comment| %>
-    //
+  <%- func_arg_comments << (variablecase(parent_resource_instance) + "Identity is the unique identifier of the " + key + "'s " + parent_resource_instance + ".") if parent_resource_instance %>
+  <%- func_arg_comments += func_arg_comments_from_model_and_link(definition, key, link) %>
+  //
+  <%- word_wrap(func_arg_comments.join(" "), line_width: 77).split("\n").each do |comment| %>
     // <%= comment %>
   <%- end %>
+  <%- required = (link["schema"] && link["schema"]["required"]) || [] %>
+  <%- optional = ((link["schema"] && link["schema"]["properties"]) || {}).keys - required %>
+  <%- postval = !required.empty? ? "params" : "options" %>
   func (c *Client) <%= func_name + "(" + func_args.join(', ') %>) <%= return_values %> {
     <%- case link["rel"] %>
     <%- when "create" %>
-      var <%= key %> <%= titlecase(key) %>
-      return &<%= key %>, c.Post(&<%= key %>, <%= path %>, options)
+      var <%= variablecase(key) %> <%= titlecase(key) %>
+      return &<%= variablecase(key) %>, c.Post(&<%= variablecase(key) %>, <%= path %>, <%= postval %>)
     <%- when "self" %>
-      var <%= key %> <%= titlecase(key) %>
-      return &<%= key %>, c.Get(&<%= key %>, <%= path %>)
+      var <%= variablecase(key) %> <%= titlecase(key) %>
+      return &<%= variablecase(key) %>, c.Get(&<%= variablecase(key) %>, <%= path %>)
     <%- when "destroy" %>
       return c.Delete(<%= path %>)
     <%- when "update" %>
-      var <%= key %> <%= titlecase(key) %>
-      return &<%= key %>, c.Patch(&<%= key %>, <%= path %>, options)
+      <%- if !required.empty? %>
+        params := struct {
+        <%- required.each do |propname| %>
+          <%= titlecase(propname) %> <%= type_for_prop(definition, propname) %> `json:"<%= propname %>"`
+        <%- end %>
+        }{
+        <%- required.each do |propname| %>
+          <%= titlecase(propname) %>: <%= variablecase(propname) %>,
+        <%- end %>
+        }
+      <%- end %>
+      var <%= variablecase(key) %> <%= titlecase(key) %>
+      return &<%= variablecase(key) %>, c.Patch(&<%= variablecase(key) %>, <%= path %>, <%= postval %>)
     <%- when "instances" %>
       req, err := c.NewRequest("GET", <%= path %>, nil)
       if err != nil {
@@ -75,23 +89,26 @@ type <%= resource_class %> struct {
         lr.SetHeader(req)
       }
 
-      var <%=key %>s []<%= titlecase(key) %>
-      return <%=key %>s, c.DoReq(req, &<%=key %>s)
+      var <%= variablecase(key) %>s []<%= titlecase(key) %>
+      return <%= variablecase(key) %>s, c.DoReq(req, &<%= variablecase(key) %>s)
     <%- end %>
   }
 
   <%- if %w{create update}.include?(link["rel"]) && link["schema"] && link["schema"]["properties"] %>
-    // <%= func_name %>Opts holds the optional parameters for <%= func_name %>
-    type <%= func_name %>Opts struct {
-      <%- link["schema"]["properties"].each do |propname, prophash| %>
-        <%- if definition['properties'][propname] && definition['properties'][propname]['description'] %>
-          // <%= definition['properties'][propname]['description'] %>
-        <%- else %>
-          // <%= definition["definitions"][propname]["description"] %>
+    <%- optional_props = link["schema"]["properties"].keys - (link["schema"]["required"] || []) %>
+    <%- if !optional_props.empty? %>
+      // <%= func_name %>Opts holds the optional parameters for <%= func_name %>
+      type <%= func_name %>Opts struct {
+        <%- optional_props.each do |propname| %>
+          <%- if definition['properties'][propname] && definition['properties'][propname]['description'] %>
+            // <%= definition['properties'][propname]['description'] %>
+          <%- else %>
+            // <%= definition["definitions"][propname]["description"] %>
+          <%- end %>
+          <%= titlecase(propname) %> <%= type_for_link_opts_field(definition, link, propname) %> `json:"<%= propname %>,omitempty"`
         <%- end %>
-        <%= titlecase(propname) %> <%= type_for_link_opts_field(definition, link, propname) %> `json:"<%= propname %>,omitempty"`
-      <%- end %>
-    }
+      }
+    <%- end %>
   <%- end %>
 
 <%- end %>
@@ -115,11 +132,28 @@ def ensure_balanced_end_quote(str)
   (str.count('"') % 2) == 1 ? "#{str}\"" : str
 end
 
+def must_end_with(str, ending)
+  str.end_with?(ending) ? str : "#{str}#{ending}"
+end
+
+def word_wrap(text, options = {})
+  line_width = options.fetch(:line_width, 80)
+
+  text.split("\n").collect do |line|
+    line.length > line_width ? line.gsub(/(.{1,#{line_width}})(\s+|$)/, "\\1\n").strip : line
+  end * "\n"
+end
+
+def variablecase(str)
+  words = str.gsub('_','-').gsub(' ','-').split('-')
+  (words[0...1] + words[1..-1].map {|k| k[0...1].upcase + k[1..-1]}).join
+end
+
 def titlecase(str)
   str.gsub('_','-').gsub(' ','-').split('-').map {|k| k[0...1].upcase + k[1..-1]}.join
 end
 
-def type_for_link_opts_field(definition, link, propname)
+def type_for_link_opts_field(definition, link, propname, nullable = true)
   inline_object = false
   typedef = if definition["definitions"][propname]
               inline_object = true
@@ -149,31 +183,37 @@ def type_for_link_opts_field(definition, link, propname)
   else
     tname = "string"
   end
-  "*#{tname}"
+  nullable ? "*#{tname}" : tname
 end
 
 def type_for_prop(definition, propname)
   nullable = false
   tname = ""
-  if definition["properties"][propname].keys.include?("$ref")
+  if definition["properties"][propname] && definition["properties"][propname].keys.include?("$ref")
     types = definition["definitions"][propname]["type"]
     nullable = true if types.delete("null")
-    tname = case types.first
-            when "boolean"
-              "bool"
-            when "integer"
-              "int"
-            when "string"
-              format = definition["definitions"][propname]["format"]
-              format && format == "date-time" ? "time.Time" : "string"
-            else
-              types.first
-            end
+    tname = type_from_types_and_format(types, definition["definitions"][propname]["format"])
+  elsif definition["definitions"][propname]
+    types = definition["definitions"][propname]["type"]
+    tname = type_from_types_and_format(types, definition["definitions"][propname]["format"])
   else
     tname = definition["properties"][propname]["properties"].first[1]["$ref"].match(/\/schema\/(\w+)#/)[1]
     tname = titlecase(tname)
   end
   "#{'*' if nullable}#{tname}"
+end
+
+def type_from_types_and_format(types, format)
+  case types.first
+  when "boolean"
+    "bool"
+  when "integer"
+    "int"
+  when "string"
+    format && format == "date-time" ? "time.Time" : "string"
+  else
+    types.first
+  end
 end
 
 def returnvals(resclass, relname)
@@ -187,37 +227,68 @@ def returnvals(resclass, relname)
   end
 end
 
-def func_args_from_model_and_link(model, link)
-  rel = link["rel"]
-  case rel
-  when "create"
-    ["options #{titlecase(model)}#{rel.capitalize}Opts"]
-  when "update"
-    ["#{model}Identity string", "options #{titlecase(model)}#{rel.capitalize}Opts"]
-  when "destroy", "self"
-    ["#{model}Identity string"]
-  when "instances"
-    ["lr *ListRange"]
-  else
-    []
+def func_args_from_model_and_link(definition, modelname, link)
+  args = []
+  required = (link["schema"] && link["schema"]["required"]) || []
+  optional = ((link["schema"] && link["schema"]["properties"]) || {}).keys - required
+
+  if %w{update destroy self}.include?(link["rel"])
+    args << "#{variablecase(modelname)}Identity string"
   end
+
+  if %w{create update}.include?(link["rel"])
+    required.each do |propname|
+      args << "#{variablecase(propname)} #{type_for_link_opts_field(definition, link, propname, false)}"
+    end
+    args << "options #{titlecase(modelname)}#{link["rel"].capitalize}Opts" unless optional.empty?
+  end
+
+  if "instances" == link["rel"]
+    args << "lr *ListRange"
+  end
+
+  args
 end
 
-def func_arg_comments_from_model_and_link(model, link)
-  rel = link["rel"]
-  case rel
+def func_arg_comments_from_model_and_link(definition, modelname, link)
+  # TODO: update to document all required params
+  args = []
+  required = (link["schema"] && link["schema"]["required"]) || []
+  optional = ((link["schema"] && link["schema"]["properties"]) || {}).keys - required
+
+  if %w{update destroy self}.include?(link["rel"])
+    args << "#{variablecase(modelname)}Identity is the unique identifier of the #{titlecase(modelname)}."
+  end
+
+  if %w{create update}.include?(link["rel"])
+    required.each do |propname|
+      desckey = "definitions"
+      if definition['properties'][propname] && definition['properties'][propname]['description']
+        desckey = "properties"
+      end
+      args << "#{variablecase(propname)} is the #{must_end_with(definition[desckey][propname]["description"], ".")}"
+    end
+    args << "options is the struct of optional parameters for this call." unless optional.empty?
+  end
+
+  if "instances" == link["rel"]
+    args << "lr is an optional ListRange that sets the Range options for the paginated list of results."
+  end
+
+  case link["rel"]
   when "create"
     ["options is the struct of optional parameters for this call."]
   when "update"
-    ["#{model}Identity is the unique identifier of the #{model}.",
+    ["#{variablecase(modelname)}Identity is the unique identifier of the #{titlecase(modelname)}.",
      "options is the struct of optional parameters for this call."]
   when "destroy", "self"
-    ["#{model}Identity is the unique identifier of the #{model}."]
+    ["#{variablecase(modelname)}Identity is the unique identifier of the #{titlecase(modelname)}."]
   when "instances"
     ["lr is an optional ListRange that sets the Range options for the paginated list of results."]
   else
     []
   end
+  args
 end
 
 def resource_instance_from_model(modelname)
@@ -254,7 +325,7 @@ data = Erubis::Eruby.new(RESOURCE_TEMPLATE).result({
   resource_proxy_instance:  resource_proxy_instance
 })
 
-path = File.expand_path(File.join(File.dirname(__FILE__), 'output', "#{modelname}.go"))
+path = File.expand_path(File.join(File.dirname(__FILE__), 'output', "#{modelname.gsub('-', '_')}.go"))
 File.open(path, 'w') do |file|
   file.write(data)
 end
