@@ -19,7 +19,9 @@ import (
 	"time"
 )
 
-// <%= definition['description'] %>
+<%- word_wrap(definition["description"], line_width: 77).split("\n").each do |line| %>
+  // <%= line %>
+<%- end %>
 type <%= resource_class %> struct {
 <%- definition['properties'].each do |propname, val| %>
   <%- if val.keys.include?("$ref") %>
@@ -44,7 +46,9 @@ type <%= resource_class %> struct {
   <%- end %>
   <%- path = ensure_balanced_end_quote(ensure_open_quote(path)) %>
 
-  // <%= link["description"] %>
+  <%- word_wrap(link["description"], line_width: 77).split("\n").each do |line| %>
+    // <%= line %>
+  <%- end %>
   <%- func_arg_comments = [] %>
   <%- func_arg_comments << (variablecase(parent_resource_instance) + "Identity is the unique identifier of the " + key + "'s " + parent_resource_instance + ".") if parent_resource_instance %>
   <%- func_arg_comments += func_arg_comments_from_model_and_link(definition, key, link) %>
