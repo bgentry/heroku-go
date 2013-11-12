@@ -8,7 +8,10 @@ unless ARGV.size == 1
   exit(1)
 end
 
-modelname = ARGV[0]
+models = [ARGV[0]]
+if models[0] == "all"
+  models = Dir.glob("schema/*.json").map{|f| f.gsub(".json", "") }.map{|f| f.gsub("schema/", "")}
+end
 
 RESOURCE_TEMPLATE = <<-RESOURCE_TEMPLATE
 // WARNING: generated code from heroku/heroics
@@ -19,20 +22,22 @@ import (
 	"time"
 )
 
-<%- word_wrap(definition["description"], line_width: 77).split("\n").each do |line| %>
-  // <%= line %>
-<%- end %>
-type <%= resource_class %> struct {
-<%- definition['properties'].each do |propname, val| %>
-  <%- if val.keys.include?("$ref") %>
-  // <%= definition['definitions'][propname]["description"] %>
-  <%- else %>
-  // <%= val["description"] %>
+<%- if definition['properties'] %>
+  <%- word_wrap(definition["description"], line_width: 77).split("\n").each do |line| %>
+    // <%= line %>
   <%- end %>
-  <%= titlecase(propname) %> <%= type_for_prop(definition, propname) %> `json:"<%= propname %>"`
+  type <%= resource_class %> struct {
+  <%- definition['properties'].each do |propname, val| %>
+    <%- if val.keys.include?("$ref") %>
+    // <%= definition['definitions'][propname]["description"] %>
+    <%- else %>
+    // <%= val["description"] %>
+    <%- end %>
+    <%= titlecase(propname) %> <%= type_for_prop(definition, propname) %> `json:"<%= propname %>"`
 
+  <%- end %>
+  }
 <%- end %>
-}
 
 <%- definition["links"].each do |link| %>
   <%- func_name = titlecase(key.downcase. + "-" + link["title"]) %>
@@ -106,8 +111,10 @@ type <%= resource_class %> struct {
         <%- optional_props.each do |propname| %>
           <%- if definition['properties'][propname] && definition['properties'][propname]['description'] %>
             // <%= definition['properties'][propname]['description'] %>
-          <%- else %>
+          <%- elsif definition["definitions"][propname] %>
             // <%= definition["definitions"][propname]["description"] %>
+          <%- else %>
+            // <%= link["schema"]["properties"][propname]["description"] %>
           <%- end %>
           <%= titlecase(propname) %> <%= type_for_link_opts_field(definition, link, propname) %> `json:"<%= propname %>,omitempty"`
         <%- end %>
@@ -162,8 +169,11 @@ def type_for_link_opts_field(definition, link, propname, nullable = true)
   typedef = if definition["definitions"][propname]
               inline_object = true
               definition["definitions"][propname]
-            else definition["properties"][propname]
+            elsif definition["properties"][propname]
               definition['properties'][propname]
+            else
+              inline_object = true
+              link["schema"]["properties"][propname]
             end
 
   tname = ""
@@ -201,7 +211,7 @@ def type_for_prop(definition, propname)
     types = definition["definitions"][propname]["type"]
     tname = type_from_types_and_format(types, definition["definitions"][propname]["format"])
   else
-    tname = definition["properties"][propname]["properties"].first[1]["$ref"].match(/\/schema\/(\w+)#/)[1]
+    tname = definition["properties"][propname]["properties"].first[1]["$ref"].match(/\/schema\/([\w-]+)#/)[1]
     tname = titlecase(tname)
   end
   "#{'*' if nullable}#{tname}"
@@ -299,37 +309,45 @@ def resource_instance_from_model(modelname)
   modelname.downcase.split('-').join('_')
 end
 
-schema_path = File.expand_path("./schema/#{modelname}.json")
-data = MultiJson.load(File.read(schema_path))
+def generate_model(modelname)
+  schema_path = File.expand_path("./schema/#{modelname}.json")
+  data = MultiJson.load(File.read(schema_path))
 
-if data['links'].empty?
-  puts "no links"
-  exit(1)
+  if data['links'].empty?
+    puts "no links"
+    exit(1)
+  end
+
+  resource_class = titlecase(modelname)
+  resource_instance = resource_instance_from_model(modelname)
+
+  resource_proxy_class = resource_class + 's'
+  resource_proxy_instance = resource_instance + 's'
+
+  parent_resource_class, parent_resource_identity, parent_resource_instance = if data['links'].all? {|link| link['href'].include?('{(%2Fschema%2Fapp%23%2Fdefinitions%2Fidentity)}')}
+    ['App', 'app_identity', 'app']
+  end
+
+  data = Erubis::Eruby.new(RESOURCE_TEMPLATE).result({
+    definition:               data,
+    key:                      modelname,
+    parent_resource_class:    parent_resource_class,
+    parent_resource_identity: parent_resource_identity,
+    parent_resource_instance: parent_resource_instance,
+    resource_class:           resource_class,
+    resource_instance:        resource_instance,
+    resource_proxy_class:     resource_proxy_class,
+    resource_proxy_instance:  resource_proxy_instance
+  })
+
+  path = File.expand_path(File.join(File.dirname(__FILE__), 'output', "#{modelname.gsub('-', '_')}.go"))
+  File.open(path, 'w') do |file|
+    file.write(data)
+  end
+  %x( go fmt #{path} )
 end
 
-resource_class = titlecase(modelname)
-resource_instance = resource_instance_from_model(modelname)
-
-resource_proxy_class = resource_class + 's'
-resource_proxy_instance = resource_instance + 's'
-
-parent_resource_class, parent_resource_identity, parent_resource_instance = if data['links'].all? {|link| link['href'].include?('{(%2Fschema%2Fapp%23%2Fdefinitions%2Fidentity)}')}
-  ['App', 'app_identity', 'app']
-end
-
-data = Erubis::Eruby.new(RESOURCE_TEMPLATE).result({
-  definition:               data,
-  key:                      modelname,
-  parent_resource_class:    parent_resource_class,
-  parent_resource_identity: parent_resource_identity,
-  parent_resource_instance: parent_resource_instance,
-  resource_class:           resource_class,
-  resource_instance:        resource_instance,
-  resource_proxy_class:     resource_proxy_class,
-  resource_proxy_instance:  resource_proxy_instance
-})
-
-path = File.expand_path(File.join(File.dirname(__FILE__), 'output', "#{modelname.gsub('-', '_')}.go"))
-File.open(path, 'w') do |file|
-  file.write(data)
+models.each do |modelname|
+  puts "Generating #{modelname}..."
+  generate_model(modelname)
 end
