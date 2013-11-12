@@ -3,15 +3,6 @@
 require 'erubis'
 require 'multi_json'
 
-unless ARGV.size == 1
-  puts "usage: ./gen.rb (modelname)"
-  exit(1)
-end
-
-models = [ARGV[0]]
-if models[0] == "all"
-  models = Dir.glob("schema/*.json").map{|f| f.gsub(".json", "") }.map{|f| f.gsub("schema/", "")}
-end
 
 RESOURCE_TEMPLATE = <<-RESOURCE_TEMPLATE
 // WARNING: generated code from heroku/heroics
@@ -116,7 +107,7 @@ import (
           <%- else %>
             // <%= link["schema"]["properties"][propname]["description"] %>
           <%- end %>
-          <%= titlecase(propname) %> <%= type_for_link_opts_field(definition, link, propname) %> `json:"<%= propname %>,omitempty"`
+          <%= titlecase(propname) %> <%= type_for_link_opts_field(link, propname) %> `json:"<%= propname %>,omitempty"`
         <%- end %>
       }
     <%- end %>
@@ -164,40 +155,46 @@ def titlecase(str)
   str.gsub('_','-').gsub(' ','-').split('-').map {|k| k[0...1].upcase + k[1..-1]}.join
 end
 
-def type_for_link_opts_field(definition, link, propname, nullable = true)
-  inline_object = false
-  typedef = if definition["definitions"][propname]
-              inline_object = true
-              definition["definitions"][propname]
-            elsif definition["properties"][propname]
-              definition['properties'][propname]
-            else
-              inline_object = true
-              link["schema"]["properties"][propname]
-            end
-
-  tname = ""
-
-  if inline_object
-    types = typedef["type"]
-    types.delete("null")
+def resolve_typedef(propdef)
+  if types = propdef["type"]
+    null = types.delete("null")
     tname = case types.first
             when "boolean"
               "bool"
             when "integer"
               "int"
             when "string"
-              format = typedef["format"]
+              format = propdef["format"]
               format && format == "date-time" ? "time.Time" : "string"
             when "object"
               "map[string]string"
             else
               types.first
             end
+    null ? "*#{tname}" : tname
+  elsif propdef["anyOf"]
+    # identity cross-reference, cheat because these are always strings atm
+    "string"
+  elsif propdef["additionalProperties"] == false
+    # inline object
+    propdef
+  elsif ref = propdef["$ref"]
+    matches = ref.match(/\/schema\/([\w-]+)#\/definitions\/([\w-]+)/)
+    schemaname, fieldname = matches[1..2]
+    resolve_typedef(schemas[schemaname]["definitions"][fieldname])
   else
-    tname = "string"
+    raise "WTF #{propdef}"
   end
-  nullable ? "*#{tname}" : tname
+end
+
+def type_for_link_opts_field(link, propname, nullable = true)
+  resulttype = resolve_typedef(link["schema"]["properties"][propname])
+  if nullable && !resulttype.start_with?("*")
+    resulttype = "*#{resulttype}"
+  elsif resulttype.start_with?("*")
+    resulttype = resulttype.gsub("*", "")
+  end
+  resulttype
 end
 
 def type_for_prop(definition, propname)
@@ -252,7 +249,7 @@ def func_args_from_model_and_link(definition, modelname, link)
 
   if %w{create update}.include?(link["rel"])
     required.each do |propname|
-      args << "#{variablecase(propname)} #{type_for_link_opts_field(definition, link, propname, false)}"
+      args << "#{variablecase(propname)} #{type_for_link_opts_field(link, propname, false)}"
     end
     args << "options #{titlecase(modelname)}#{link["rel"].capitalize}Opts" unless optional.empty?
   end
@@ -264,25 +261,42 @@ def func_args_from_model_and_link(definition, modelname, link)
   args
 end
 
+def resolve_propdef(propdef)
+  if propdef["description"]
+    propdef
+  elsif ref = propdef["$ref"]
+    matches = ref.match(/\/schema\/([\w-]+)#\/definitions\/([\w-]+)/)
+    schemaname, fieldname = matches[1..2]
+    resolve_propdef(schemas[schemaname]["definitions"][fieldname])
+  elsif anyof = propdef["anyOf"]
+    # Identity
+    matches = anyof.first["$ref"].match(/\/schema\/([\w-]+)#\/definitions\/([\w-]+)/)
+    schemaname, fieldname = matches[1..2]
+    resolve_propdef(schemas[schemaname]["definitions"][fieldname])
+  elsif propdef["type"] && propdef["type"].is_a?(Array) && propdef["type"].first == "object"
+    # special case for params which are nested objects, like oauth-grant
+    propdef
+  else
+    raise "WTF #{propdef}"
+  end
+end
+
 def func_arg_comments_from_model_and_link(definition, modelname, link)
-  # TODO: update to document all required params
   args = []
-  required = (link["schema"] && link["schema"]["required"]) || []
-  optional = ((link["schema"] && link["schema"]["properties"]) || {}).keys - required
+  properties = (link["schema"] && link["schema"]["properties"]) || {}
+  required_keys = (link["schema"] && link["schema"]["required"]) || []
+  optional_keys = properties.keys - required_keys
 
   if %w{update destroy self}.include?(link["rel"])
     args << "#{variablecase(modelname)}Identity is the unique identifier of the #{titlecase(modelname)}."
   end
 
   if %w{create update}.include?(link["rel"])
-    required.each do |propname|
-      desckey = "definitions"
-      if definition['properties'][propname] && definition['properties'][propname]['description']
-        desckey = "properties"
-      end
-      args << "#{variablecase(propname)} is the #{must_end_with(definition[desckey][propname]["description"], ".")}"
+    required_keys.each do |propname|
+      rpresult = resolve_propdef(link["schema"]["properties"][propname])
+      args << "#{variablecase(propname)} is the #{must_end_with(rpresult["description"] || "", ".")}"
     end
-    args << "options is the struct of optional parameters for this call." unless optional.empty?
+    args << "options is the struct of optional parameters for this call." unless optional_keys.empty?
   end
 
   if "instances" == link["rel"]
@@ -309,13 +323,21 @@ def resource_instance_from_model(modelname)
   modelname.downcase.split('-').join('_')
 end
 
-def generate_model(modelname)
-  schema_path = File.expand_path("./schema/#{modelname}.json")
-  data = MultiJson.load(File.read(schema_path))
+def schemas
+  @@schemas ||= {}
+end
 
-  if data['links'].empty?
-    puts "no links"
-    exit(1)
+def load_model_schema(modelname)
+  schema_path = File.expand_path("./schema/#{modelname}.json")
+  schemas[modelname] = MultiJson.load(File.read(schema_path))
+end
+
+def generate_model(modelname)
+  if !schemas[modelname]
+    puts "no schema for #{modelname}" && return
+  end
+  if schemas[modelname]['links'].empty?
+    puts "no links for #{modelname}"
   end
 
   resource_class = titlecase(modelname)
@@ -324,12 +346,12 @@ def generate_model(modelname)
   resource_proxy_class = resource_class + 's'
   resource_proxy_instance = resource_instance + 's'
 
-  parent_resource_class, parent_resource_identity, parent_resource_instance = if data['links'].all? {|link| link['href'].include?('{(%2Fschema%2Fapp%23%2Fdefinitions%2Fidentity)}')}
+  parent_resource_class, parent_resource_identity, parent_resource_instance = if schemas[modelname]['links'].all? {|link| link['href'].include?('{(%2Fschema%2Fapp%23%2Fdefinitions%2Fidentity)}')}
     ['App', 'app_identity', 'app']
   end
 
   data = Erubis::Eruby.new(RESOURCE_TEMPLATE).result({
-    definition:               data,
+    definition:               schemas[modelname],
     key:                      modelname,
     parent_resource_class:    parent_resource_class,
     parent_resource_identity: parent_resource_identity,
@@ -345,6 +367,13 @@ def generate_model(modelname)
     file.write(data)
   end
   %x( go fmt #{path} )
+end
+
+models = Dir.glob("schema/*.json").map{|f| f.gsub(".json", "") }.map{|f| f.gsub("schema/", "")}
+
+models.each do |modelname|
+  puts "Loading #{modelname}..."
+  load_model_schema(modelname)
 end
 
 models.each do |modelname|
