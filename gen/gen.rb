@@ -52,11 +52,28 @@ import (
   <%- end %>
   <%- required = (link["schema"] && link["schema"]["required"]) || [] %>
   <%- optional = ((link["schema"] && link["schema"]["properties"]) || {}).keys - required %>
-  <%- postval = required.empty? ? "options" : "params" %>
+  <%- postval = if required.empty? && optional.empty? %>
+    <%-           "nil" %>
+    <%-         elsif required.empty? %>
+    <%-           "options" %>
+    <%-         else %>
+    <%-           "params" %>
+    <%-         end %>
   <%- hasCustomType = !schemas[key]["properties"].nil? %>
   func (c *Client) <%= func_name + "(" + func_args.join(', ') %>) <%= return_values %> {
     <%- case link["rel"] %>
     <%- when "create" %>
+      <%- if !required.empty? %>
+        params := struct {
+        <%- required.each do |propname| %>
+          <%= titlecase(propname) %> <%= resolve_typedef(link["schema"]["properties"][propname]) %> `json:"<%= propname %>"`
+        <%- end %>
+        }{
+        <%- required.each do |propname| %>
+          <%= titlecase(propname) %>: <%= variablecase(propname) %>,
+        <%- end %>
+        }
+      <%- end %>
       var <%= variablecase(key) %> <%= titlecase(key) %>
       return &<%= variablecase(key) %>, c.Post(&<%= variablecase(key) %>, <%= path %>, <%= postval %>)
     <%- when "self" %>
@@ -68,7 +85,7 @@ import (
       <%- if !required.empty? %>
         params := struct {
         <%- required.each do |propname| %>
-          <%= titlecase(propname) %> <%= type_for_prop(key, propname) %> `json:"<%= propname %>"`
+          <%= titlecase(propname) %> <%= resolve_typedef(link["schema"]["properties"][propname]) %> `json:"<%= propname %>"`
         <%- end %>
         }{
         <%- required.each do |propname| %>
