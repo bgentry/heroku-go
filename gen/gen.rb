@@ -296,20 +296,26 @@ def func_args_from_model_and_link(definition, modelname, link)
 end
 
 def resolve_propdef(propdef)
+  resolve_all_propdefs(propdef).first
+end
+
+def resolve_all_propdefs(propdef)
   if propdef["description"]
-    propdef
+    [propdef]
   elsif ref = propdef["$ref"]
     matches = ref.match(/\/schema\/([\w-]+)#\/definitions\/([\w-]+)/)
     schemaname, fieldname = matches[1..2]
-    resolve_propdef(schemas[schemaname]["definitions"][fieldname])
+    resolve_all_propdefs(schemas[schemaname]["definitions"][fieldname])
   elsif anyof = propdef["anyOf"]
     # Identity
-    matches = anyof.first["$ref"].match(/\/schema\/([\w-]+)#\/definitions\/([\w-]+)/)
-    schemaname, fieldname = matches[1..2]
-    resolve_propdef(schemas[schemaname]["definitions"][fieldname])
+    anyof.map do |refhash|
+      matches = refhash["$ref"].match(/\/schema\/([\w-]+)#\/definitions\/([\w-]+)/)
+      schemaname, fieldname = matches[1..2]
+      resolve_all_propdefs(schemas[schemaname]["definitions"][fieldname])
+    end.flatten
   elsif propdef["type"] && propdef["type"].is_a?(Array) && propdef["type"].first == "object"
     # special case for params which are nested objects, like oauth-grant
-    propdef
+    [propdef]
   else
     raise "WTF #{propdef}"
   end
@@ -327,8 +333,14 @@ def func_arg_comments_from_model_and_link(definition, modelname, link)
 
   if %w{create update}.include?(link["rel"])
     required_keys.each do |propname|
-      rpresult = resolve_propdef(link["schema"]["properties"][propname])
-      args << "#{variablecase(propname)} is the #{must_end_with(rpresult["description"] || "", ".")}"
+      rpresults = resolve_all_propdefs(link["schema"]["properties"][propname])
+      if rpresults.size == 1
+        args << "#{variablecase(propname)} is the #{must_end_with(rpresults.first["description"] || "", ".")}"
+      elsif rpresults.size == 2
+        args << "#{variablecase(propname)} is the #{rpresults.first["description"]} or #{must_end_with(rpresults.last["description"] || "", ".")}"
+      else
+        raise "Didn't expect 3 rpresults"
+      end
     end
     args << "options is the struct of optional parameters for this call." unless optional_keys.empty?
   end
