@@ -88,7 +88,7 @@ import (
       return &<%= variablecase(key) %>, c.Post(&<%= variablecase(key) %>, <%= path %>, <%= postval %>)
     <%- when "self" %>
       var <%= variablecase(key) %> <%= hasCustomType ? titlecase(key) : "map[string]string" %>
-      return &<%= variablecase(key) %>, c.Get(&<%= variablecase(key) %>, <%= path %>)
+      return <%= "&" if hasCustomType%><%= variablecase(key) %>, c.Get(&<%= variablecase(key) %>, <%= path %>)
     <%- when "destroy" %>
       return c.Delete(<%= path %>)
     <%- when "update" %>
@@ -104,7 +104,7 @@ import (
         }
       <%- end %>
       var <%= variablecase(key) %> <%= hasCustomType ? titlecase(key) : "map[string]string" %>
-      return &<%= variablecase(key) %>, c.Patch(&<%= variablecase(key) %>, <%= path %>, <%= postval %>)
+      return <%= "&" if hasCustomType%><%= variablecase(key) %>, c.Patch(&<%= variablecase(key) %>, <%= path %>, <%= postval %>)
     <%- when "instances" %>
       req, err := c.NewRequest("GET", <%= path %>, nil)
       if err != nil {
