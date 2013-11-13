@@ -9,7 +9,7 @@ RESOURCE_TEMPLATE = <<-RESOURCE_TEMPLATE
 
 package heroku
 
-<%- if schemas[key]['properties'] && schemas[key]['properties'].any?{|p, v| type_for_prop(key, p).end_with?("time.Time") } %>
+<%- if schemas[key]['properties'] && schemas[key]['properties'].any?{|p, v| resolve_typedef(v).end_with?("time.Time") } %>
 import (
 	"time"
 )
@@ -20,9 +20,19 @@ import (
     // <%= line %>
   <%- end %>
   type <%= resource_class %> struct {
-  <%- definition['properties'].each do |propname, val| %>
-    // <%= resolve_propdef(val)["description"] %>
-    <%= titlecase(propname) %> <%= type_for_prop(key, propname) %> `json:"<%= propname %>"`
+  <%- definition['properties'].each do |propname, propdef| %>
+    <%- resolved_propdef = resolve_propdef(propdef) %>
+    // <%= resolved_propdef["description"] %>
+    <%- type = resolve_typedef(resolved_propdef) %>
+    <%- if type =~ /\\*?struct/ %>
+      <%= titlecase(propname) %> <%= type %> {
+        <%- resolved_propdef["properties"].each do |subpropname, subpropdef| %>
+          <%= titlecase(subpropname) %> <%= resolve_typedef(subpropdef) %> `json:"<%= subpropname %>"`
+        <%- end %>
+      } `json:"<%= propname %>"`
+    <%- else %>
+      <%= titlecase(propname) %> <%= resolve_typedef(propdef) %> `json:"<%= propname %>"`
+    <%- end %>
 
   <%- end %>
   }
@@ -189,11 +199,10 @@ def resolve_typedef(propdef)
               format = propdef["format"]
               format && format == "date-time" ? "time.Time" : "string"
             when "object"
-              if propdef["properties"]
-                schemaname = propdef["properties"].first[1]["$ref"].match(/\/schema\/([\w-]+)#/)[1]
-                titlecase(schemaname)
-              else
+              if propdef["additionalProperties"] == false
                 "map[string]string"
+              else
+                "struct"
               end
             when "array"
               arraytype = propdef["items"]["type"]
@@ -225,13 +234,6 @@ def type_for_link_opts_field(link, propname, nullable = true)
     resulttype = resulttype.gsub("*", "")
   end
   resulttype
-end
-
-def type_for_prop(modelname, propname)
-  propdef = schemas[modelname]["properties"][propname] || schemas[modelname]["definitions"][propname]
-  tdresult = resolve_typedef(propdef)
-  nullable = false
-  return "#{'*' if nullable}#{tdresult}"
 end
 
 def type_from_types_and_format(types, format)
