@@ -51,13 +51,14 @@ import (
   <%- required = (link["schema"] && link["schema"]["required"]) || [] %>
   <%- optional = ((link["schema"] && link["schema"]["properties"]) || {}).keys - required %>
   <%- postval = !required.empty? ? "params" : "options" %>
+  <%- hasCustomType = !schemas[key]["properties"].nil? %>
   func (c *Client) <%= func_name + "(" + func_args.join(', ') %>) <%= return_values %> {
     <%- case link["rel"] %>
     <%- when "create" %>
       var <%= variablecase(key) %> <%= titlecase(key) %>
       return &<%= variablecase(key) %>, c.Post(&<%= variablecase(key) %>, <%= path %>, <%= postval %>)
     <%- when "self" %>
-      var <%= variablecase(key) %> <%= titlecase(key) %>
+      var <%= variablecase(key) %> <%= hasCustomType ? titlecase(key) : "map[string]string" %>
       return &<%= variablecase(key) %>, c.Get(&<%= variablecase(key) %>, <%= path %>)
     <%- when "destroy" %>
       return c.Delete(<%= path %>)
@@ -73,7 +74,7 @@ import (
         <%- end %>
         }
       <%- end %>
-      var <%= variablecase(key) %> <%= titlecase(key) %>
+      var <%= variablecase(key) %> <%= hasCustomType ? titlecase(key) : "map[string]string" %>
       return &<%= variablecase(key) %>, c.Patch(&<%= variablecase(key) %>, <%= path %>, <%= postval %>)
     <%- when "instances" %>
       req, err := c.NewRequest("GET", <%= path %>, nil)
@@ -219,13 +220,18 @@ def type_from_types_and_format(types, format)
 end
 
 def returnvals(modelname, relname)
-  case relname
-  when "destroy"
-    "error"
-  when "instances"
-    "([]#{titlecase(modelname)}, error)"
+  if !schemas[modelname]["properties"]
+    # structless type like ConfigVar
+    "(map[string]string, error)"
   else
-    "(*#{titlecase(modelname)}, error)"
+    case relname
+    when "destroy"
+      "error"
+    when "instances"
+      "([]#{titlecase(modelname)}, error)"
+    else
+      "(*#{titlecase(modelname)}, error)"
+    end
   end
 end
 
