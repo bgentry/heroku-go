@@ -9,9 +9,11 @@ RESOURCE_TEMPLATE = <<-RESOURCE_TEMPLATE
 
 package heroku
 
+<%- if schemas[key]['properties'] && schemas[key]['properties'].any?{|p, v| type_for_prop(key, p).end_with?("time.Time") } %>
 import (
 	"time"
 )
+<%- end %>
 
 <%- if definition['properties'] %>
   <%- word_wrap(definition["description"], line_width: 77).split("\n").each do |line| %>
@@ -160,8 +162,8 @@ end
 
 def resolve_typedef(propdef)
   if types = propdef["type"]
-    null = types.delete("null")
-    tname = case types.first
+    null = types.include?("null")
+    tname = case (types - ["null"]).first
             when "boolean"
               "bool"
             when "integer"
