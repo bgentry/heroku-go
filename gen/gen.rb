@@ -149,7 +149,13 @@ def variablecase(str)
 end
 
 def titlecase(str)
-  str.gsub('_','-').gsub(' ','-').split('-').map {|k| k[0...1].upcase + k[1..-1]}.join
+  str.gsub('_','-').gsub(' ','-').split('-').map do |k|
+    if k.downcase == "url" # special case so Url becomes URL
+      k.upcase
+    else
+      k[0...1].upcase + k[1..-1]
+    end
+  end.join
 end
 
 def resolve_typedef(propdef)
