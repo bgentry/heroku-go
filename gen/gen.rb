@@ -50,7 +50,7 @@ import (
   <%- end %>
   <%- required = (link["schema"] && link["schema"]["required"]) || [] %>
   <%- optional = ((link["schema"] && link["schema"]["properties"]) || {}).keys - required %>
-  <%- postval = !required.empty? ? "params" : "options" %>
+  <%- postval = required.empty? ? "options" : "params" %>
   <%- hasCustomType = !schemas[key]["properties"].nil? %>
   func (c *Client) <%= func_name + "(" + func_args.join(', ') %>) <%= return_values %> {
     <%- case link["rel"] %>
@@ -240,7 +240,9 @@ def func_args_from_model_and_link(definition, modelname, link)
   required = (link["schema"] && link["schema"]["required"]) || []
   optional = ((link["schema"] && link["schema"]["properties"]) || {}).keys - required
 
-  if %w{update destroy self}.include?(link["rel"])
+  # check if this link's href requires the model's identity
+  match = link["href"].match(%r{%2Fschema%2F#{modelname}%23%2Fdefinitions%2Fidentity})
+  if %w{update destroy self}.include?(link["rel"]) && match
     args << "#{variablecase(modelname)}Identity string"
   end
 
