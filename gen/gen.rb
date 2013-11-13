@@ -24,7 +24,7 @@ import (
     <%- else %>
     // <%= val["description"] %>
     <%- end %>
-    <%= titlecase(propname) %> <%= type_for_prop(definition, propname) %> `json:"<%= propname %>"`
+    <%= titlecase(propname) %> <%= type_for_prop(key, propname) %> `json:"<%= propname %>"`
 
   <%- end %>
   }
@@ -35,7 +35,7 @@ import (
   <%- func_args = [] %>
   <%- func_args << (variablecase(parent_resource_instance) + 'Identity string') if parent_resource_instance %>
   <%- func_args += func_args_from_model_and_link(definition, key, link) %>
-  <%- return_values = returnvals(titlecase(key), link["rel"]) %>
+  <%- return_values = returnvals(key, link["rel"]) %>
   <%- path = link['href'].gsub("{(%2Fschema%2F\#{key}%23%2Fdefinitions%2Fidentity)}", '"+' + variablecase(resource_instance) + 'Identity') %>
   <%- if parent_resource_instance %>
     <%- path = path.gsub("{(%2Fschema%2F" + parent_resource_instance + "%23%2Fdefinitions%2Fidentity)}", '" + ' + variablecase(parent_resource_instance) + 'Identity + "') %>
@@ -69,7 +69,7 @@ import (
       <%- if !required.empty? %>
         params := struct {
         <%- required.each do |propname| %>
-          <%= titlecase(propname) %> <%= type_for_prop(definition, propname) %> `json:"<%= propname %>"`
+          <%= titlecase(propname) %> <%= type_for_prop(key, propname) %> `json:"<%= propname %>"`
         <%- end %>
         }{
         <%- required.each do |propname| %>
@@ -167,7 +167,12 @@ def resolve_typedef(propdef)
               format = propdef["format"]
               format && format == "date-time" ? "time.Time" : "string"
             when "object"
-              "map[string]string"
+              if propdef["properties"]
+                schemaname = propdef["properties"].first[1]["$ref"].match(/\/schema\/([\w-]+)#/)[1]
+                titlecase(schemaname)
+              else
+                "map[string]string"
+              end
             else
               types.first
             end
@@ -197,21 +202,11 @@ def type_for_link_opts_field(link, propname, nullable = true)
   resulttype
 end
 
-def type_for_prop(definition, propname)
+def type_for_prop(modelname, propname)
+  propdef = schemas[modelname]["properties"][propname] || schemas[modelname]["definitions"][propname]
+  tdresult = resolve_typedef(propdef)
   nullable = false
-  tname = ""
-  if definition["properties"][propname] && definition["properties"][propname].keys.include?("$ref")
-    types = definition["definitions"][propname]["type"]
-    nullable = true if types.delete("null")
-    tname = type_from_types_and_format(types, definition["definitions"][propname]["format"])
-  elsif definition["definitions"][propname]
-    types = definition["definitions"][propname]["type"]
-    tname = type_from_types_and_format(types, definition["definitions"][propname]["format"])
-  else
-    tname = definition["properties"][propname]["properties"].first[1]["$ref"].match(/\/schema\/([\w-]+)#/)[1]
-    tname = titlecase(tname)
-  end
-  "#{'*' if nullable}#{tname}"
+  return "#{'*' if nullable}#{tdresult}"
 end
 
 def type_from_types_and_format(types, format)
@@ -227,14 +222,14 @@ def type_from_types_and_format(types, format)
   end
 end
 
-def returnvals(resclass, relname)
+def returnvals(modelname, relname)
   case relname
   when "destroy"
     "error"
   when "instances"
-    "([]#{resclass}, error)"
+    "([]#{titlecase(modelname)}, error)"
   else
-    "(*#{resclass}, error)"
+    "(*#{titlecase(modelname)}, error)"
   end
 end
 
