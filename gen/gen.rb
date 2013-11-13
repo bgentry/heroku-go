@@ -247,8 +247,13 @@ def func_args_from_model_and_link(definition, modelname, link)
   end
 
   if %w{create update}.include?(link["rel"])
-    required.each do |propname|
-      args << "#{variablecase(propname)} #{type_for_link_opts_field(link, propname, false)}"
+    if link["schema"]["additionalProperties"] == false
+      # handle ConfigVar update
+      args << "options map[string]*string"
+    else
+      required.each do |propname|
+        args << "#{variablecase(propname)} #{type_for_link_opts_field(link, propname, false)}"
+      end
     end
     args << "options #{titlecase(modelname)}#{link["rel"].capitalize}Opts" unless optional.empty?
   end
