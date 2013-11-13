@@ -204,7 +204,7 @@ def type_for_link_opts_field(link, propname, nullable = true)
   resulttype = resolve_typedef(link["schema"]["properties"][propname])
   if nullable && !resulttype.start_with?("*")
     resulttype = "*#{resulttype}"
-  elsif resulttype.start_with?("*")
+  elsif !nullable
     resulttype = resulttype.gsub("*", "")
   end
   resulttype
