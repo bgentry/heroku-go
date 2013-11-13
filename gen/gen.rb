@@ -84,8 +84,8 @@ import (
         <%- end %>
         }
       <%- end %>
-      var <%= variablecase(key) %> <%= titlecase(key) %>
-      return &<%= variablecase(key) %>, c.Post(&<%= variablecase(key) %>, <%= path %>, <%= postval %>)
+      var <%= variablecase(key + '-res') %> <%= titlecase(key) %>
+      return &<%= variablecase(key + '-res') %>, c.Post(&<%= variablecase(key + '-res') %>, <%= path %>, <%= postval %>)
     <%- when "self" %>
       var <%= variablecase(key) %> <%= hasCustomType ? titlecase(key) : "map[string]string" %>
       return <%= "&" if hasCustomType%><%= variablecase(key) %>, c.Get(&<%= variablecase(key) %>, <%= path %>)
@@ -103,8 +103,8 @@ import (
         <%- end %>
         }
       <%- end %>
-      var <%= variablecase(key) %> <%= hasCustomType ? titlecase(key) : "map[string]string" %>
-      return <%= "&" if hasCustomType%><%= variablecase(key) %>, c.Patch(&<%= variablecase(key) %>, <%= path %>, <%= postval %>)
+      var <%= variablecase(key + '-res') %> <%= hasCustomType ? titlecase(key) : "map[string]string" %>
+      return <%= "&" if hasCustomType%><%= variablecase(key + '-res') %>, c.Patch(&<%= variablecase(key + '-res') %>, <%= path %>, <%= postval %>)
     <%- when "instances" %>
       req, err := c.NewRequest("GET", <%= path %>, nil)
       if err != nil {
@@ -115,8 +115,8 @@ import (
         lr.SetHeader(req)
       }
 
-      var <%= variablecase(key) %>s []<%= titlecase(key) %>
-      return <%= variablecase(key) %>s, c.DoReq(req, &<%= variablecase(key) %>s)
+      var <%= variablecase(key + 's-res') %> []<%= titlecase(key) %>
+      return <%= variablecase(key + 's-res') %>, c.DoReq(req, &<%= variablecase(key + 's-res') %>)
     <%- end %>
   }
 
