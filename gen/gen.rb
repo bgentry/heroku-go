@@ -170,6 +170,9 @@ def resolve_typedef(propdef)
               else
                 "map[string]string"
               end
+            when "array"
+              arraytype = propdef["items"]["type"]
+              "[]#{arraytype}"
             else
               types.first
             end
