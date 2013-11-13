@@ -19,11 +19,7 @@ import (
   <%- end %>
   type <%= resource_class %> struct {
   <%- definition['properties'].each do |propname, val| %>
-    <%- if val.keys.include?("$ref") %>
-    // <%= definition['definitions'][propname]["description"] %>
-    <%- else %>
-    // <%= val["description"] %>
-    <%- end %>
+    // <%= resolve_propdef(val)["description"] %>
     <%= titlecase(propname) %> <%= type_for_prop(key, propname) %> `json:"<%= propname %>"`
 
   <%- end %>
