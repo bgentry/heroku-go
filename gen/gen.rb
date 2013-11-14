@@ -188,6 +188,8 @@ def titlecase(str)
   str.gsub('_','-').gsub(' ','-').split('-').map do |k|
     if k.downcase == "url" # special case so Url becomes URL
       k.upcase
+    elsif k.downcase == "oauth" # special case so Oauth becomes OAuth
+      "OAuth"
     else
       k[0...1].upcase + k[1..-1]
     end
