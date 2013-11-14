@@ -368,6 +368,10 @@ def func_arg_comments_from_model_and_link(definition, modelname, link)
     required_keys.each do |propname|
       rpresults = resolve_all_propdefs(link["schema"]["properties"][propname])
       if rpresults.size == 1
+        if rpresults.first["properties"]
+          # special case for things like OAuthToken with nested objects
+          rpresults = resolve_all_propdefs(definition["properties"][propname])
+        end
         args << "#{variablecase(propname)} is the #{must_end_with(rpresults.first["description"] || "", ".")}"
       elsif rpresults.size == 2
         args << "#{variablecase(propname)} is the #{rpresults.first["description"]} or #{must_end_with(rpresults.last["description"] || "", ".")}"
