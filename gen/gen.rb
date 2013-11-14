@@ -461,5 +461,9 @@ end
 
 models.each do |modelname|
   puts "Generating #{modelname}..."
-  generate_model(modelname)
+  if (schemas[modelname]["links"] || []).empty? && schemas[modelname]["properties"].empty?
+    puts "-- skipping #{modelname} because it has no links or properties"
+  else
+    generate_model(modelname)
+  end
 end
