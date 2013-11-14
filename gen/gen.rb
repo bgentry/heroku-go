@@ -75,15 +75,7 @@ import (
     <%- case link["rel"] %>
     <%- when "create" %>
       <%- if !required.empty? %>
-        params := struct {
-        <%- required.each do |propname| %>
-          <%= titlecase(propname) %> <%= resolve_typedef(link["schema"]["properties"][propname]) %> `json:"<%= propname %>"`
-        <%- end %>
-        }{
-        <%- required.each do |propname| %>
-          <%= titlecase(propname) %>: <%= variablecase(propname) %>,
-        <%- end %>
-        }
+        <%= Erubis::Eruby.new(LINK_PARAMS_TEMPLATE).result({link: link, required: required, optional: optional}).strip %>
       <%- end %>
       var <%= variablecase(key + '-res') %> <%= titlecase(key) %>
       return &<%= variablecase(key + '-res') %>, c.Post(&<%= variablecase(key + '-res') %>, <%= path %>, <%= postval %>)
@@ -94,15 +86,7 @@ import (
       return c.Delete(<%= path %>)
     <%- when "update" %>
       <%- if !required.empty? %>
-        params := struct {
-        <%- required.each do |propname| %>
-          <%= titlecase(propname) %> <%= resolve_typedef(link["schema"]["properties"][propname]) %> `json:"<%= propname %>"`
-        <%- end %>
-        }{
-        <%- required.each do |propname| %>
-          <%= titlecase(propname) %>: <%= variablecase(propname) %>,
-        <%- end %>
-        }
+        <%= Erubis::Eruby.new(LINK_PARAMS_TEMPLATE).result({link: link, required: required, optional: optional}).strip %>
       <%- end %>
       var <%= variablecase(key + '-res') %> <%= hasCustomType ? titlecase(key) : "map[string]string" %>
       return <%= "&" if hasCustomType%><%= variablecase(key + '-res') %>, c.Patch(&<%= variablecase(key + '-res') %>, <%= path %>, <%= postval %>)
@@ -142,6 +126,24 @@ import (
 
 <%- end %>
 RESOURCE_TEMPLATE
+
+LINK_PARAMS_TEMPLATE = <<-LINK_PARAMS_TEMPLATE
+params := struct {
+<%- required.each do |propname| %>
+  <%= titlecase(propname) %> <%= resolve_typedef(link["schema"]["properties"][propname]) %> `json:"<%= propname %>"`
+<%- end %>
+<%- optional.each do |propname| %>
+  <%= titlecase(propname) %> <%= type_for_link_opts_field(link, propname) %> `json:"<%= propname %>,omitempty"`
+<%- end %>
+}{
+<%- required.each do |propname| %>
+  <%= titlecase(propname) %>: <%= variablecase(propname) %>,
+<%- end %>
+<%- optional.each do |propname| %>
+  <%= titlecase(propname) %>: options.<%= titlecase(propname) %>,
+<%- end %>
+}
+LINK_PARAMS_TEMPLATE
 
 #   definition:               data,
 #   key:                      modelname,
