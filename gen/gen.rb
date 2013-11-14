@@ -16,7 +16,8 @@ import (
 <%- end %>
 
 <%- if definition['properties'] %>
-  <%- word_wrap(definition["description"], line_width: 77).split("\n").each do |line| %>
+  <%- description = markdown_free(definition["description"] || "") %>
+  <%- word_wrap(description, line_width: 77).split("\n").each do |line| %>
     // <%= line %>
   <%- end %>
   type <%= resource_class %> struct {
@@ -170,6 +171,10 @@ def word_wrap(text, options = {})
   text.split("\n").collect do |line|
     line.length > line_width ? line.gsub(/(.{1,#{line_width}})(\s+|$)/, "\\1\n").strip : line
   end * "\n"
+end
+
+def markdown_free(text)
+  text.gsub(/\[(?<linktext>[^\]]*)\](?<linkurl>\(.*\))/, '\k<linktext>')
 end
 
 def variablecase(str)
