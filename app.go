@@ -1,3 +1,7 @@
+// WARNING: This code is auto-generated from the Heroku Platform API JSON Schema
+// by a Ruby script (gen/gen.rb). Changes should be made to the generation
+// script rather than the generated files.
+
 package heroku
 
 import (
@@ -17,7 +21,7 @@ type App struct {
 	CreatedAt time.Time `json:"created_at"`
 
 	// git repo URL of app
-	GitUrl string `json:"git_url"`
+	GitURL string `json:"git_url"`
 
 	// unique identifier of app
 	Id string `json:"id"`
@@ -29,10 +33,16 @@ type App struct {
 	Name string `json:"name"`
 
 	// identity of app owner
-	Owner Account `json:"owner"`
+	Owner struct {
+		Email string `json:"email"`
+		Id    string `json:"id"`
+	} `json:"owner"`
 
 	// identity of app region
-	Region Region `json:"region"`
+	Region struct {
+		Id   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"region"`
 
 	// when app was released
 	ReleasedAt *time.Time `json:"released_at"`
@@ -44,27 +54,29 @@ type App struct {
 	SlugSize *int `json:"slug_size"`
 
 	// identity of app stack
-	Stack Stack `json:"stack"`
+	Stack struct {
+		Id   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"stack"`
 
 	// when app was updated
 	UpdatedAt time.Time `json:"updated_at"`
 
 	// web URL of app
-	WebUrl string `json:"web_url"`
+	WebURL string `json:"web_url"`
 }
 
 // Create a new app.
 //
-// options is a struct of the optional parameters for this call: name, region,
-// and stack.
+// options is the struct of optional parameters for this call.
 func (c *Client) AppCreate(options AppCreateOpts) (*App, error) {
-	var app App
-	return &app, c.Post(&app, "/apps", options)
+	var appRes App
+	return &appRes, c.Post(&appRes, "/apps", options)
 }
 
 // AppCreateOpts holds the optional parameters for AppCreate
 type AppCreateOpts struct {
-	// name of app
+	// unique name of app
 	Name *string `json:"name,omitempty"`
 	// identity of app region
 	Region *string `json:"region,omitempty"`
@@ -74,14 +86,14 @@ type AppCreateOpts struct {
 
 // Delete an existing app.
 //
-// appIdentity is the unique name of app or unique identifier of app.
+// appIdentity is the unique identifier of the App.
 func (c *Client) AppDelete(appIdentity string) error {
 	return c.Delete("/apps/" + appIdentity)
 }
 
 // Info for existing app.
 //
-// appIdentity is the unique name of app or unique identifier of app.
+// appIdentity is the unique identifier of the App.
 func (c *Client) AppInfo(appIdentity string) (*App, error) {
 	var app App
 	return &app, c.Get(&app, "/apps/"+appIdentity)
@@ -101,25 +113,23 @@ func (c *Client) AppList(lr *ListRange) ([]App, error) {
 		lr.SetHeader(req)
 	}
 
-	var apps []App
-	return apps, c.DoReq(req, &apps)
+	var appsRes []App
+	return appsRes, c.DoReq(req, &appsRes)
 }
 
 // Update an existing app.
 //
-// appIdentity is the unique name of app or unique identifier of app.
-//
-// options is a struct of the optional parameters for this call: name and
-// maintenance.
+// appIdentity is the unique identifier of the App. options is the struct of
+// optional parameters for this call.
 func (c *Client) AppUpdate(appIdentity string, options AppUpdateOpts) (*App, error) {
-	var app App
-	return &app, c.Patch(&app, "/apps/"+appIdentity, options)
+	var appRes App
+	return &appRes, c.Patch(&appRes, "/apps/"+appIdentity, options)
 }
 
 // AppUpdateOpts holds the optional parameters for AppUpdate
 type AppUpdateOpts struct {
 	// maintenance status of app
 	Maintenance *bool `json:"maintenance,omitempty"`
-	// name of app
+	// unique name of app
 	Name *string `json:"name,omitempty"`
 }
