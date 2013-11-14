@@ -445,7 +445,7 @@ def generate_model(modelname)
     resource_proxy_instance:  resource_proxy_instance
   })
 
-  path = File.expand_path(File.join(File.dirname(__FILE__), 'output', "#{modelname.gsub('-', '_')}.go"))
+  path = File.expand_path(File.join(File.dirname(__FILE__), '..', "#{modelname.gsub('-', '_')}.go"))
   File.open(path, 'w') do |file|
     file.write(data)
   end
