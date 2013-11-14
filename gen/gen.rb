@@ -5,7 +5,9 @@ require 'multi_json'
 
 
 RESOURCE_TEMPLATE = <<-RESOURCE_TEMPLATE
-// WARNING: generated code from heroku/heroics
+// WARNING: This code is auto-generated from the Heroku Platform API JSON Schema
+// by a Ruby script (gen/gen.rb). Changes should be made to the generation
+// script rather than the generated files.
 
 package heroku
 
