@@ -75,7 +75,7 @@ import (
     <%- case link["rel"] %>
     <%- when "create" %>
       <%- if !required.empty? %>
-        <%= Erubis::Eruby.new(LINK_PARAMS_TEMPLATE).result({link: link, required: required, optional: optional}).strip %>
+        <%= Erubis::Eruby.new(LINK_PARAMS_TEMPLATE).result({modelname: key, link: link, required: required, optional: optional}).strip %>
       <%- end %>
       var <%= variablecase(key + '-res') %> <%= titlecase(key) %>
       return &<%= variablecase(key + '-res') %>, c.Post(&<%= variablecase(key + '-res') %>, <%= path %>, <%= postval %>)
@@ -106,11 +106,29 @@ import (
   }
 
   <%- if %w{create update}.include?(link["rel"]) && link["schema"] && link["schema"]["properties"] %>
-    <%- optional_props = link["schema"]["properties"].keys - (link["schema"]["required"] || []) %>
-    <%- if !optional_props.empty? %>
+    <%- if !required.empty? %>
+      <%- structs = required.select {|p| resolve_typedef(link["schema"]["properties"][p]).include?("struct") } %>
+      <%- structs.each do |propname| %>
+        <%- typename = titlecase([key, link["title"], propname].join("-")) %>
+        // <%= typename %> used in <%= func_name %> as the <%= definition["properties"][propname]["description"] %>
+        type <%= typename %> struct {
+          <%- link["schema"]["properties"][propname]["properties"].each do |subpropname, subval| %>
+            <%- propdef = definition["properties"][propname]["properties"][subpropname] %>
+            <%- description = resolve_propdef(propdef)["description"] %>
+            <%- word_wrap(description, line_width: 77).split("\n").each do |line| %>
+              // <%= line %>
+            <%- end %>
+            <%= titlecase(subpropname) %> <%= resolve_typedef(subval) %> `json:"<%= subpropname %>"`
+
+          <%- end %>
+        }
+
+      <%- end %>
+    <%- end %>
+    <%- if !optional.empty? %>
       // <%= func_name %>Opts holds the optional parameters for <%= func_name %>
       type <%= func_name %>Opts struct {
-        <%- optional_props.each do |propname| %>
+        <%- optional.each do |propname| %>
           <%- if definition['properties'][propname] && definition['properties'][propname]['description'] %>
             // <%= definition['properties'][propname]['description'] %>
           <%- elsif definition["definitions"][propname] %>
@@ -130,7 +148,9 @@ RESOURCE_TEMPLATE
 LINK_PARAMS_TEMPLATE = <<-LINK_PARAMS_TEMPLATE
 params := struct {
 <%- required.each do |propname| %>
-  <%= titlecase(propname) %> <%= resolve_typedef(link["schema"]["properties"][propname]) %> `json:"<%= propname %>"`
+  <%- type = resolve_typedef(link["schema"]["properties"][propname]) %>
+  <%- type = titlecase([modelname, link["title"], propname].join("-")) if type.include?("struct") %>
+  <%= titlecase(propname) %> <%= type %> `json:"<%= propname %>"`
 <%- end %>
 <%- optional.each do |propname| %>
   <%= titlecase(propname) %> <%= type_for_link_opts_field(link, propname) %> `json:"<%= propname %>,omitempty"`
@@ -291,7 +311,11 @@ def func_args_from_model_and_link(definition, modelname, link)
       args << "options map[string]*string"
     else
       required.each do |propname|
-        args << "#{variablecase(propname)} #{type_for_link_opts_field(link, propname, false)}"
+        type = type_for_link_opts_field(link, propname, false)
+        if type.include?("struct")
+          type = titlecase([modelname, link["title"], propname].join("-"))
+        end
+        args << "#{variablecase(propname)} #{type}"
       end
     end
     args << "options #{titlecase(modelname)}#{link["rel"].capitalize}Opts" unless optional.empty?
