@@ -46,6 +46,13 @@ type Client struct {
 	// UserAgent to be provided in API requests. Set to DefaultUserAgent if not
 	// specified.
 	UserAgent string
+
+	// Debug mode can be used to dump the full request and response to stdout.
+	Debug bool
+
+	// AdditionalHeaders are extra headers to add to each HTTP request sent by
+	// this Client.
+	AdditionalHeaders http.Header
 }
 
 func (c *Client) Get(v interface{}, path string) error {
@@ -120,13 +127,8 @@ func (c *Client) NewRequest(method, path string, body interface{}) (*http.Reques
 		req.Header.Set("Content-Type", ctype)
 	}
 	req.SetBasicAuth(c.Username, c.Password)
-	for _, h := range strings.Split(os.Getenv("HKHEADER"), "\n") {
-		if i := strings.Index(h, ":"); i >= 0 {
-			req.Header.Set(
-				strings.TrimSpace(h[:i]),
-				strings.TrimSpace(h[i+1:]),
-			)
-		}
+	for k, v := range c.AdditionalHeaders {
+		req.Header[k] = v
 	}
 	return req, nil
 }
@@ -152,8 +154,7 @@ func (c *Client) APIReq(v interface{}, meth, path string, body interface{}) erro
 //   else       body is decoded into v as json
 //
 func (c *Client) DoReq(req *http.Request, v interface{}) error {
-	debug := os.Getenv("HKDEBUG") != ""
-	if debug {
+	if c.Debug {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err != nil {
 			log.Println(err)
@@ -173,7 +174,7 @@ func (c *Client) DoReq(req *http.Request, v interface{}) error {
 		return err
 	}
 	defer res.Body.Close()
-	if debug {
+	if c.Debug {
 		dump, err := httputil.DumpResponse(res, true)
 		if err != nil {
 			log.Println(err)

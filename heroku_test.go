@@ -7,6 +7,30 @@ import (
 	"testing"
 )
 
+func TestAdditionalHeaders(t *testing.T) {
+	multival := []string{"awesome", "multival"}
+	c := &Client{AdditionalHeaders: http.Header{
+		"Fake-Header":     []string{"value"},
+		"X-Heroku-Header": multival,
+	}}
+	req, err := c.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if val := req.Header.Get("Fake-Header"); val != "value" {
+		t.Errorf("Fake-Header expected %q, got %q", "value", val)
+	}
+	val := req.Header["X-Heroku-Header"]
+	if len(val) != len(multival) {
+		t.Errorf("X-Heroku-Header len expected %d, got %d", len(multival), len(val))
+	}
+	for i, v := range val {
+		if v != multival[i] {
+			t.Errorf("X-Heroku-Header value[%d] expected %q, got %q", i, multival[i], v)
+		}
+	}
+}
+
 func TestRequestId(t *testing.T) {
 	c := &Client{}
 	req, err := c.NewRequest("GET", "/", nil)
