@@ -46,7 +46,7 @@ import (
   <%- func_args = [] %>
   <%- func_args << (variablecase(parent_resource_instance) + 'Identity string') if parent_resource_instance %>
   <%- func_args += func_args_from_model_and_link(definition, key, link) %>
-  <%- return_values = returnvals(key, link["rel"]) %>
+  <%- return_values = return_values_from_link(key, link) %>
   <%- path = link['href'].gsub("{(%2Fschema%2F\#{key}%23%2Fdefinitions%2Fidentity)}", '"+' + variablecase(resource_instance) + 'Identity') %>
   <%- if parent_resource_instance %>
     <%- path = path.gsub("{(%2Fschema%2F" + parent_resource_instance + "%23%2Fdefinitions%2Fidentity)}", '" + ' + variablecase(parent_resource_instance) + 'Identity + "') %>
@@ -280,12 +280,12 @@ def type_from_types_and_format(types, format)
   end
 end
 
-def returnvals(modelname, relname)
+def return_values_from_link(modelname, link)
   if !schemas[modelname]["properties"]
     # structless type like ConfigVar
     "(map[string]string, error)"
   else
-    case relname
+    case link["rel"]
     when "destroy"
       "error"
     when "instances"
