@@ -18,6 +18,7 @@ import (
 
 const (
 	Version          = "0.1"
+	DefaultAPIURL    = "https://api.heroku.com"
 	DefaultUserAgent = "heroku-go/" + Version + " (" + runtime.GOOS + "; " + runtime.GOARCH + ")"
 )
 
@@ -110,7 +111,7 @@ func (c *Client) NewRequest(method, path string, body interface{}) (*http.Reques
 	}
 	apiURL := strings.TrimRight(c.URL, "/")
 	if apiURL == "" {
-		apiURL = "https://api.heroku.com"
+		apiURL = DefaultAPIURL
 	}
 	req, err := http.NewRequest(method, apiURL+path, rbody)
 	if err != nil {
