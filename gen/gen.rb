@@ -52,7 +52,7 @@ import (
   <%- end %>
   <%- path = ensure_balanced_end_quote(ensure_open_quote(path)) %>
 
-  <%- word_wrap(link["description"], line_width: 77).split("\n").each do |line| %>
+  <%- word_wrap(markdown_free(link["description"]), line_width: 77).split("\n").each do |line| %>
     // <%= line %>
   <%- end %>
   <%- func_arg_comments = [] %>
@@ -197,7 +197,8 @@ def word_wrap(text, options = {})
 end
 
 def markdown_free(text)
-  text.gsub(/\[(?<linktext>[^\]]*)\](?<linkurl>\(.*\))/, '\k<linktext>')
+  text.gsub(/\[(?<linktext>[^\]]*)\](?<linkurl>\(.*\))/, '\k<linktext>').
+    gsub(/`(?<rawtext>[^\]]*)`/, '\k<rawtext>').gsub("NULL", "nil")
 end
 
 def variablecase(str)

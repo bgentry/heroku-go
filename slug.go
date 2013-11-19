@@ -39,9 +39,8 @@ func (c *Client) SlugInfo(appIdentity string, slugIdentity string) (*Slug, error
 	return &slug, c.Get(&slug, "/apps/"+appIdentity+"/slugs/"+slugIdentity)
 }
 
-// Create a new slug. For more information please refer to [Deploying Slugs
-// using the Platform
-// API](https://devcenter.heroku.com/articles/platform-api-deploying-slugs?preview=1).
+// Create a new slug. For more information please refer to Deploying Slugs using
+// the Platform API.
 //
 // appIdentity is the unique identifier of the slug's app. processTypes is the
 // hash mapping process type names to their respective command. options is the

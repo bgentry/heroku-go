@@ -14,7 +14,7 @@ func (c *Client) ConfigVarInfo(appIdentity string) (map[string]string, error) {
 }
 
 // Update config-vars for app. You can update existing config-vars by setting
-// them again, and remove by setting it to `NULL`.
+// them again, and remove by setting it to nil.
 //
 // appIdentity is the unique identifier of the config-var's app.
 // configVarIdentity is the unique identifier of the ConfigVar.

@@ -9,7 +9,7 @@ import (
 )
 
 // SSL Endpoint is a public address serving custom SSL cert for HTTPS traffic to
-// a Heroku app. Note that an app must have the `ssl:endpoint` addon installed
+// a Heroku app. Note that an app must have the ssl:endpoint addon installed
 // before it can provision an SSL Endpoint using these APIs.
 type SslEndpoint struct {
 	// raw contents of the public certificate chain (eg: .crt or .pem file)
