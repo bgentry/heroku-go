@@ -16,9 +16,9 @@ func (c *Client) ConfigVarInfo(appIdentity string) (map[string]string, error) {
 // Update config-vars for app. You can update existing config-vars by setting
 // them again, and remove by setting it to nil.
 //
-// appIdentity is the unique identifier of the config-var's app.
-// configVarIdentity is the unique identifier of the ConfigVar.
+// appIdentity is the unique identifier of the config-var's app. options is the
+// hash of config changes – update values or delete by seting it to nil.
 func (c *Client) ConfigVarUpdate(appIdentity string, options map[string]*string) (map[string]string, error) {
 	var configVarRes map[string]string
-	return configVarRes, c.Patch(&configVarRes, "/apps/"+appIdentity+"/config-vars", nil)
+	return configVarRes, c.Patch(&configVarRes, "/apps/"+appIdentity+"/config-vars", options)
 }

@@ -62,9 +62,12 @@ import (
   <%- word_wrap(func_arg_comments.join(" "), line_width: 77).split("\n").each do |comment| %>
     // <%= comment %>
   <%- end %>
+  <%- flat_postval = link["schema"] && link["schema"]["additionalProperties"] == false %>
   <%- required = (link["schema"] && link["schema"]["required"]) || [] %>
   <%- optional = ((link["schema"] && link["schema"]["properties"]) || {}).keys - required %>
-  <%- postval = if required.empty? && optional.empty? %>
+  <%- postval = if flat_postval %>
+    <%-           "options" %>
+    <%-         elsif required.empty? && optional.empty? %>
     <%-           "nil" %>
     <%-         elsif required.empty? %>
     <%-           "options" %>
@@ -358,12 +361,19 @@ end
 
 def func_arg_comments_from_model_and_link(definition, modelname, link)
   args = []
+  flat_postval = link["schema"] && link["schema"]["additionalProperties"] == false
   properties = (link["schema"] && link["schema"]["properties"]) || {}
   required_keys = (link["schema"] && link["schema"]["required"]) || []
   optional_keys = properties.keys - required_keys
 
   if %w{update destroy self}.include?(link["rel"])
-    args << "#{variablecase(modelname)}Identity is the unique identifier of the #{titlecase(modelname)}."
+    if flat_postval
+      # special case for ConfigVar update w/ flat param struct
+      desc = markdown_free(link["schema"]["description"])
+      args << "options is the #{desc}."
+    else
+      args << "#{variablecase(modelname)}Identity is the unique identifier of the #{titlecase(modelname)}."
+    end
   end
 
   if %w{create update}.include?(link["rel"])
