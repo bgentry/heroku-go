@@ -53,11 +53,8 @@ type App struct {
 	// slug size in bytes of app
 	SlugSize *int `json:"slug_size"`
 
-	// identity of app stack
-	Stack struct {
-		Id   string `json:"id"`
-		Name string `json:"name"`
-	} `json:"stack"`
+	// unique name of stack
+	Stack string `json:"stack"`
 
 	// when app was updated
 	UpdatedAt time.Time `json:"updated_at"`
@@ -80,7 +77,7 @@ type AppCreateOpts struct {
 	Name *string `json:"name,omitempty"`
 	// identity of app region
 	Region *string `json:"region,omitempty"`
-	// identity of app stack
+	// unique name of stack
 	Stack *string `json:"stack,omitempty"`
 }
 

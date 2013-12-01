@@ -137,6 +137,8 @@ import (
             // <%= definition['properties'][propname]['description'] %>
           <%- elsif definition["definitions"][propname] %>
             // <%= definition["definitions"][propname]["description"] %>
+          <%- elsif link["schema"]["properties"][propname]["$ref"] %>
+            // <%= resolve_propdef(link["schema"]["properties"][propname])["description"] %>
           <%- else %>
             // <%= link["schema"]["properties"][propname]["description"] %>
           <%- end %>
