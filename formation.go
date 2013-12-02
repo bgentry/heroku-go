@@ -76,7 +76,7 @@ func (c *Client) FormationBatchUpdate(appIdentity string, updates []FormationBat
 		Updates: updates,
 	}
 	var formationsRes []Formation
-	return &formationRes, c.Patch(&formationRes, "/apps/"+appIdentity+"/formation", params)
+	return formationsRes, c.Patch(&formationsRes, "/apps/"+appIdentity+"/formation", params)
 }
 
 type FormationBatchUpdateOpts struct {

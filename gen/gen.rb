@@ -94,10 +94,11 @@ import (
       <%- end %>
       <%- if link["title"].include?("Batch") %>
         var <%= variablecase(key + 's-res') %> []<%= titlecase(key) %>
+        return <%= variablecase(key + 's-res') %>, c.Patch(&<%= variablecase(key + 's-res') %>, <%= path %>, <%= postval %>)
       <%- else %>
         var <%= variablecase(key + '-res') %> <%= hasCustomType ? titlecase(key) : "map[string]string" %>
+        return <%= "&" if hasCustomType%><%= variablecase(key + '-res') %>, c.Patch(&<%= variablecase(key + '-res') %>, <%= path %>, <%= postval %>)
       <%- end %>
-      return <%= "&" if hasCustomType%><%= variablecase(key + '-res') %>, c.Patch(&<%= variablecase(key + '-res') %>, <%= path %>, <%= postval %>)
     <%- when "instances" %>
       req, err := c.NewRequest("GET", <%= path %>, nil)
       if err != nil {
