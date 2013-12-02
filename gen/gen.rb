@@ -92,7 +92,11 @@ import (
       <%- if !required.empty? %>
         <%= Erubis::Eruby.new(LINK_PARAMS_TEMPLATE).result({modelname: key, link: link, required: required, optional: optional}).strip %>
       <%- end %>
-      var <%= variablecase(key + '-res') %> <%= hasCustomType ? titlecase(key) : "map[string]string" %>
+      <%- if link["title"].include?("Batch") %>
+        var <%= variablecase(key + 's-res') %> []<%= titlecase(key) %>
+      <%- else %>
+        var <%= variablecase(key + '-res') %> <%= hasCustomType ? titlecase(key) : "map[string]string" %>
+      <%- end %>
       return <%= "&" if hasCustomType%><%= variablecase(key + '-res') %>, c.Patch(&<%= variablecase(key + '-res') %>, <%= path %>, <%= postval %>)
     <%- when "instances" %>
       req, err := c.NewRequest("GET", <%= path %>, nil)
@@ -327,7 +331,11 @@ def return_values_from_link(modelname, link)
     when "instances"
       "([]#{titlecase(modelname)}, error)"
     else
-      "(*#{titlecase(modelname)}, error)"
+      if link["title"].include?("Batch")
+        "([]#{titlecase(modelname)}, error)"
+      else
+        "(*#{titlecase(modelname)}, error)"
+      end
     end
   end
 end

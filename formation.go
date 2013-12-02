@@ -69,13 +69,13 @@ func (c *Client) FormationList(appIdentity string, lr *ListRange) ([]Formation, 
 // Array with formation updates. Each element must have "process", the id or
 // name of the process type to be updated, and can optionally update its
 // "quantity" or "size".
-func (c *Client) FormationBatchUpdate(appIdentity string, updates []FormationBatchUpdateOpts) (*Formation, error) {
+func (c *Client) FormationBatchUpdate(appIdentity string, updates []FormationBatchUpdateOpts) ([]Formation, error) {
 	params := struct {
 		Updates []FormationBatchUpdateOpts `json:"updates"`
 	}{
 		Updates: updates,
 	}
-	var formationRes Formation
+	var formationsRes []Formation
 	return &formationRes, c.Patch(&formationRes, "/apps/"+appIdentity+"/formation", params)
 }
 
