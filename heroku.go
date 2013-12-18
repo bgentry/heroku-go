@@ -1,4 +1,7 @@
-// Package heroku is a client interface to the Heroku API.
+// Copyright (c) 2013 Blake Gentry. All rights reserved. Use of
+// this source code is governed by an MIT license that can be
+// found in the LICENSE file.
+
 package heroku
 
 import (
