@@ -156,6 +156,34 @@ func TestAppCreateSuccess(t *testing.T) {
 		Status: 201,
 		Body:   appMarshaled,
 	}
+	appCreateRequest := newTestRequest("POST", "/apps", "", appCreateResponse)
+	appCreateRequest.Matcher = testnet.RequestBodyMatcherWithContentType("", "")
+
+	ts, handler, c := newTestServerAndClient(t, appCreateRequest)
+	defer ts.Close()
+
+	app, err := c.AppCreate(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if app == nil {
+		t.Fatal("no app object returned")
+	}
+	var emptyapp App
+	if *app == emptyapp {
+		t.Errorf("returned app is empty")
+	}
+
+	if !handler.AllRequestsCalled() {
+		t.Errorf("not all expected requests were called")
+	}
+}
+
+func TestAppCreateSuccessWithOpts(t *testing.T) {
+	appCreateResponse := testnet.TestResponse{
+		Status: 201,
+		Body:   appMarshaled,
+	}
 	appCreateRequestBody := `{"name":"example", "region":"us", "stack":"cedar"}`
 	appCreateRequest := newTestRequest("POST", "/apps", appCreateRequestBody, appCreateResponse)
 

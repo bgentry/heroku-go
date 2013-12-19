@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"reflect"
 	"runtime"
 	"strings"
 )
@@ -105,12 +106,15 @@ func (c *Client) NewRequest(method, path string, body interface{}) (*http.Reques
 	case io.Reader:
 		rbody = t
 	default:
-		j, err := json.Marshal(body)
-		if err != nil {
-			log.Fatal(err)
+		v := reflect.ValueOf(body)
+		if v.IsValid() && !v.IsNil() {
+			j, err := json.Marshal(body)
+			if err != nil {
+				log.Fatal(err)
+			}
+			rbody = bytes.NewReader(j)
+			ctype = "application/json"
 		}
-		rbody = bytes.NewReader(j)
-		ctype = "application/json"
 	}
 	apiURL := strings.TrimRight(c.URL, "/")
 	if apiURL == "" {
