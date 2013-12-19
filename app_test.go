@@ -167,7 +167,7 @@ func TestAppCreateSuccess(t *testing.T) {
 	ts, handler, c := newTestServerAndClient(t, appCreateRequest)
 	defer ts.Close()
 
-	app, err := c.AppCreate(appCreateRequestOptions)
+	app, err := c.AppCreate(&appCreateRequestOptions)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -250,7 +250,7 @@ func TestAppUpdateSuccess(t *testing.T) {
 	ts, handler, c := newTestServerAndClient(t, appUpdateRequest)
 	defer ts.Close()
 
-	app, err := c.AppUpdate("example", appUpdateRequestOptions)
+	app, err := c.AppUpdate("example", &appUpdateRequestOptions)
 	if err != nil {
 		t.Fatal(err)
 	}
