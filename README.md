@@ -38,8 +38,8 @@ import (
 Then create a Client object and make calls to it:
 
 ```go
-client := heroku.Client{Usernam: "email@me.com", Password: "my-api-key"}
-app, err := client.AppCreate(nil)
+client := heroku.Client{Username: "email@me.com", Password: "my-api-key"}
+app, err := client.AppCreate(heroku.AppCreateOpts{})
 if err != nil {
   panic(err)
 }
