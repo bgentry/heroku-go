@@ -35,7 +35,7 @@ To use the client, first add it to your Go file's imports list:
 
 Then create a Client object and make calls to it:
 
-  client := heroku.Client{Usernam: "email@me.com", Password: "my-api-key"}
+  client := heroku.Client{Username: "email@me.com", Password: "my-api-key"}
   app, err := client.AppCreate(heroku.AppCreateOpts{})
   if err != nil {
     panic(err)
