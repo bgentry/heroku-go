@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	Version          = "0.4.1"
+	Version          = "0.4.2"
 	DefaultAPIURL    = "https://api.heroku.com"
 	DefaultUserAgent = "heroku-go/" + Version + " (" + runtime.GOOS + "; " + runtime.GOARCH + ")"
 )
@@ -108,7 +108,7 @@ func (c *Client) NewRequest(method, path string, body interface{}) (*http.Reques
 	default:
 		if v := reflect.ValueOf(body); v.IsValid() {
 			t := v.Type()
-			if t.Kind() != reflect.Ptr || reflect.Indirect(v).IsValid() {
+			if t.Kind() != reflect.Ptr || (reflect.Indirect(v).IsValid() && !reflect.Indirect(v).IsNil()) {
 				j, err := json.Marshal(body)
 				if err != nil {
 					log.Fatal(err)
