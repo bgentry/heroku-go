@@ -92,9 +92,22 @@ options struct, and the options will be omitted from the API request entirely.
 For any individual options that you don't want to set, simply leave them as
 `nil`, and they will be omitted from the API request.
 
+## List Ranges & Sorting
+
+Results from the Heroku API are paginated. You can specify a field for sorting
+and adjust the maximum number of records returned by providing a `ListRange` to
+API calls that list objects:
+
+```go
+apps, err = client.AppList(&heroku.ListRange{Field: "name", Max: 1000})
+```
+
+Note `Field` [is required][range-docs] when setting any range options.
+
 ## Documentation
 
 More detailed documentation is available on [godoc][godoc].
 
 [godoc]: https://godoc.org/github.com/bgentry/heroku-go "heroku-go on Godoc.org"
 [platform-api]: https://devcenter.heroku.com/articles/platform-api-reference "Heroku Platform API"
+[range-docs]: https://devcenter.heroku.com/articles/platform-api-reference#ranges "Request Ranges"
