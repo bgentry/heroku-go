@@ -108,6 +108,15 @@ Note `Field` [is required][range-docs] when setting any range options.
 
 More detailed documentation is available on [godoc][godoc].
 
+## Thank You
+
+A special thanks goes out to [Keith Rarick](https://github.com/kr) for writing
+much of the [base API client](https://github.com/bgentry/heroku-go/blob/master/main.go)
+as part of [hk](https://github.com/heroku/hk). I also want to thank the Heroku
+API team for making their API available in JSON schema and for the early version
+of [heroics](https://github.com/heroku/heroics), on which this generator is
+based.
+
 [godoc]: https://godoc.org/github.com/bgentry/heroku-go "heroku-go on Godoc.org"
 [platform-api]: https://devcenter.heroku.com/articles/platform-api-reference "Heroku Platform API"
 [range-docs]: https://devcenter.heroku.com/articles/platform-api-reference#ranges "Request Ranges"
