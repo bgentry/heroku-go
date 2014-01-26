@@ -11,8 +11,11 @@ import (
 // A slug is a snapshot of your application code that is ready to run on the
 // platform.
 type Slug struct {
-	// HTTP verb and url where clients can fetch or store the release blob file
-	Blob map[string]string `json:"blob"`
+	// pointer to the url where clients can fetch or store the actual release binary
+	Blob struct {
+		Method string `json:"method"`
+		URL    string `json:"url"`
+	} `json:"blob"`
 
 	// identification of the code with your version control system (eg: SHA of the git HEAD)
 	Commit *string `json:"commit"`
