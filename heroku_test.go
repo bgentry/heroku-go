@@ -3,12 +3,13 @@ package heroku
 import (
 	"bytes"
 	"errors"
-	"github.com/bgentry/testnet"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/bgentry/testnet"
 )
 
 // Tests

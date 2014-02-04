@@ -6,7 +6,6 @@ package heroku
 
 import (
 	"bytes"
-	"code.google.com/p/go-uuid/uuid"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -18,6 +17,8 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+
+	"code.google.com/p/go-uuid/uuid"
 )
 
 const (
