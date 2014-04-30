@@ -86,7 +86,7 @@ import (
     <%- when "self" %>
       var <%= variablecase(key) %> <%= hasCustomType ? titlecase(key) : "map[string]string" %>
       return <%= "&" if hasCustomType%><%= variablecase(key) %>, c.Get(&<%= variablecase(key) %>, <%= path %>)
-    <%- when "destroy" %>
+    <%- when "destroy", "empty" %>
       return c.Delete(<%= path %>)
     <%- when "update" %>
       <%- if !required.empty? %>
@@ -284,9 +284,9 @@ module Generator
                 arraytype = if propdef["items"]["$ref"]
                   resolve_typedef(propdef["items"])
                 else
-                  puts "propdef[items][type]: #{propdef["items"]["type"].inspect}"
                   propdef["items"]["type"]
                 end
+                arraytype = arraytype.first if arraytype.is_a?(Array)
                 "[]#{arraytype}"
               else
                 types.first
@@ -336,7 +336,7 @@ module Generator
       "(map[string]string, error)"
     else
       case link["rel"]
-      when "destroy"
+      when "destroy", "empty"
         "error"
       when "instances"
         "([]#{titlecase(modelname)}, error)"
@@ -357,7 +357,7 @@ module Generator
 
     # check if this link's href requires the model's identity
     match = link["href"].match(%r{%23%2Fdefinitions%2F#{modelname}%2Fdefinitions%2Fidentity})
-    if %w{update destroy self}.include?(link["rel"]) && match
+    if %w{update destroy self empty}.include?(link["rel"]) && match
       args << "#{variablecase(modelname)}Identity string"
     end
 
@@ -419,7 +419,7 @@ module Generator
     required_keys = (link["schema"] && link["schema"]["required"]) || []
     optional_keys = properties.keys - required_keys
 
-    if %w{update destroy self}.include?(link["rel"])
+    if %w{update destroy self empty}.include?(link["rel"])
       if flat_postval
         # special case for ConfigVar update w/ flat param struct
         desc = markdown_free(link["schema"]["description"])
@@ -457,7 +457,7 @@ module Generator
     when "update"
       ["#{variablecase(modelname)}Identity is the unique identifier of the #{titlecase(modelname)}.",
        "options is the struct of optional parameters for this action."]
-    when "destroy", "self"
+    when "destroy", "self", "empty"
       ["#{variablecase(modelname)}Identity is the unique identifier of the #{titlecase(modelname)}."]
     when "instances"
       ["lr is an optional ListRange that sets the Range options for the paginated list of results."]

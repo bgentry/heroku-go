@@ -95,7 +95,8 @@ func (c *Client) AddonList(appIdentity string, lr *ListRange) ([]Addon, error) {
 	return addonsRes, c.DoReq(req, &addonsRes)
 }
 
-// Update an existing add-on.
+// Change add-on plan. Some add-ons may not support changing plans. In that
+// case, an error will be returned.
 //
 // appIdentity is the unique identifier of the addon's app. addonIdentity is the
 // unique identifier of the Addon. plan is the unique identifier of this plan or

@@ -36,17 +36,27 @@ type SSLEndpoint struct {
 // appIdentity is the unique identifier of the ssl-endpoint's app.
 // certificateChain is the raw contents of the public certificate chain (eg:
 // .crt or .pem file). privateKey is the contents of the private key (eg .key
-// file).
-func (c *Client) SSLEndpointCreate(appIdentity string, certificateChain string, privateKey string) (*SSLEndpoint, error) {
+// file). options is the struct of optional parameters for this action.
+func (c *Client) SSLEndpointCreate(appIdentity string, certificateChain string, privateKey string, options *SSLEndpointCreateOpts) (*SSLEndpoint, error) {
 	params := struct {
 		CertificateChain string `json:"certificate_chain"`
 		PrivateKey       string `json:"private_key"`
+		Preprocess       *bool  `json:"preprocess,omitempty"`
 	}{
 		CertificateChain: certificateChain,
 		PrivateKey:       privateKey,
 	}
+	if options != nil {
+		params.Preprocess = options.Preprocess
+	}
 	var sslEndpointRes SSLEndpoint
 	return &sslEndpointRes, c.Post(&sslEndpointRes, "/apps/"+appIdentity+"/ssl-endpoints", params)
+}
+
+// SSLEndpointCreateOpts holds the optional parameters for SSLEndpointCreate
+type SSLEndpointCreateOpts struct {
+	// allow Heroku to modify an uploaded public certificate chain if deemed advantageous by adding missing intermediaries, stripping unnecessary ones, etc.
+	Preprocess *bool `json:"preprocess,omitempty"`
 }
 
 // Delete existing SSL endpoint.
@@ -99,6 +109,8 @@ func (c *Client) SSLEndpointUpdate(appIdentity string, sslEndpointIdentity strin
 type SSLEndpointUpdateOpts struct {
 	// raw contents of the public certificate chain (eg: .crt or .pem file)
 	CertificateChain *string `json:"certificate_chain,omitempty"`
+	// allow Heroku to modify an uploaded public certificate chain if deemed advantageous by adding missing intermediaries, stripping unnecessary ones, etc.
+	Preprocess *bool `json:"preprocess,omitempty"`
 	// contents of the private key (eg .key file)
 	PrivateKey *string `json:"private_key,omitempty"`
 	// indicates that a rollback should be performed

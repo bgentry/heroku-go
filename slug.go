@@ -32,6 +32,9 @@ type Slug struct {
 	// hash mapping process type names to their respective command
 	ProcessTypes map[string]string `json:"process_types"`
 
+	// size of slug, in bytes
+	Size *int `json:"size"`
+
 	// when slug was updated
 	UpdatedAt time.Time `json:"updated_at"`
 }

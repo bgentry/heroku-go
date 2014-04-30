@@ -13,8 +13,8 @@ type Account struct {
 	// whether to allow third party web activity tracking
 	AllowTracking bool `json:"allow_tracking"`
 
-	// whether to utilize beta Heroku features
-	Beta *bool `json:"beta"`
+	// whether allowed to utilize beta Heroku features
+	Beta bool `json:"beta"`
 
 	// when account was created
 	CreatedAt time.Time `json:"created_at"`
@@ -27,6 +27,9 @@ type Account struct {
 
 	// when account last authorized with Heroku
 	LastLogin time.Time `json:"last_login"`
+
+	// full name of the account owner
+	Name *string `json:"name"`
 
 	// when account was updated
 	UpdatedAt time.Time `json:"updated_at"`
@@ -70,7 +73,7 @@ func (c *Client) AccountUpdate(password string, options *AccountUpdateOpts) (*Ac
 type AccountUpdateOpts struct {
 	// whether to allow third party web activity tracking
 	AllowTracking *bool `json:"allow_tracking,omitempty"`
-	// whether to utilize beta Heroku features
+	// whether allowed to utilize beta Heroku features
 	Beta *bool `json:"beta,omitempty"`
 	// full name of the account owner
 	Name *string `json:"name,omitempty"`

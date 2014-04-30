@@ -25,7 +25,7 @@ type Formation struct {
 	// number of processes to maintain
 	Quantity int `json:"quantity"`
 
-	// dyno size (default: "1")
+	// dyno size (default: "1X")
 	Size string `json:"size"`
 
 	// type of process to maintain
@@ -87,7 +87,7 @@ type FormationBatchUpdateOpts struct {
 	// number of processes to maintain
 	Quantity *int `json:"quantity,omitempty"`
 
-	// dyno size (default: "1")
+	// dyno size (default: "1X")
 	Size *string `json:"size,omitempty"`
 }
 
@@ -105,6 +105,6 @@ func (c *Client) FormationUpdate(appIdentity string, formationIdentity string, o
 type FormationUpdateOpts struct {
 	// number of processes to maintain
 	Quantity *int `json:"quantity,omitempty"`
-	// dyno size (default: "1")
+	// dyno size (default: "1X")
 	Size *string `json:"size,omitempty"`
 }

@@ -31,7 +31,7 @@ type Dyno struct {
 		Version int    `json:"version"`
 	} `json:"release"`
 
-	// dyno size (default: "1")
+	// dyno size (default: "1X")
 	Size string `json:"size"`
 
 	// current status of process (either: crashed, down, idle, starting, or up)
@@ -73,7 +73,7 @@ type DynoCreateOpts struct {
 	Attach *bool `json:"attach,omitempty"`
 	// custom environment to add to the dyno config vars
 	Env *map[string]string `json:"env,omitempty"`
-	// dyno size (default: "1")
+	// dyno size (default: "1X")
 	Size *string `json:"size,omitempty"`
 }
 
