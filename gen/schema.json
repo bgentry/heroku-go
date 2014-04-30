@@ -3086,6 +3086,507 @@
         }
       }
     },
+    "organization-app-collaborator": {
+      "description": "An organization collaborator represents an account that has been given access to an organization app on Heroku.",
+      "id": "schemata/organization-app-collaborator",
+      "$schema": "http://json-schema.org/draft-04/hyper-schema",
+      "stability": "prototype",
+      "title": "Heroku Platform API - Organization App Collaborator",
+      "type": [
+        "object"
+      ],
+      "definitions": {
+      },
+      "links": [
+        {
+          "description": "Create a new collaborator on an organization app. Use this endpoint instead of the `/apps/{app_id_or_name}/collaborator` endpoint when you want the collaborator to be granted [privileges] (https://devcenter.heroku.com/articles/org-users-access#roles) according to their role in the organization.",
+          "href": "/organizations/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/collaborators",
+          "method": "POST",
+          "rel": "create",
+          "schema": {
+            "properties": {
+              "silent": {
+                "$ref": "#/definitions/collaborator/definitions/silent"
+              },
+              "user": {
+                "$ref": "#/definitions/account/definitions/identity"
+              }
+            },
+            "required": [
+              "user"
+            ],
+            "type": [
+              "object"
+            ]
+          },
+          "title": "Create"
+        },
+        {
+          "description": "Delete an existing collaborator from an organization app.",
+          "href": "/organizations/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/collaborators/{(%23%2Fdefinitions%2Fcollaborator%2Fdefinitions%2Fidentity)}",
+          "method": "DELETE",
+          "rel": "destroy",
+          "title": "Delete"
+        },
+        {
+          "description": "Info for a collaborator on an organization app.",
+          "href": "/organizations/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/collaborators/{(%23%2Fdefinitions%2Fcollaborator%2Fdefinitions%2Fidentity)}",
+          "method": "GET",
+          "rel": "self",
+          "title": "Info"
+        },
+        {
+          "description": "List collaborators on an organization app.",
+          "href": "/organizations/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/collaborators",
+          "method": "GET",
+          "rel": "instances",
+          "title": "List"
+        }
+      ],
+      "properties": {
+        "created_at": {
+          "$ref": "#/definitions/collaborator/definitions/created_at"
+        },
+        "id": {
+          "$ref": "#/definitions/collaborator/definitions/id"
+        },
+        "role": {
+          "$ref": "#/definitions/organization/definitions/role"
+        },
+        "updated_at": {
+          "$ref": "#/definitions/collaborator/definitions/updated_at"
+        },
+        "user": {
+          "description": "identity of collaborated account",
+          "properties": {
+            "email": {
+              "$ref": "#/definitions/account/definitions/email"
+            },
+            "id": {
+              "$ref": "#/definitions/account/definitions/id"
+            }
+          },
+          "type": [
+            "object"
+          ]
+        }
+      }
+    },
+    "organization-app": {
+      "$schema": "http://json-schema.org/draft-04/hyper-schema",
+      "description": "An organization app encapsulates the organization specific functionality of Heroku apps.",
+      "id": "schemata/organization-app",
+      "stability": "prototype",
+      "title": "Heroku Platform API - Organization App",
+      "type": [
+        "object"
+      ],
+      "definitions": {
+        "locked": {
+          "default": false,
+          "description": "are other organization members forbidden from joining this app.",
+          "example": false,
+          "type": [
+            "boolean"
+          ]
+        },
+        "joined": {
+          "default": false,
+          "description": "is the current member a collaborator on this app.",
+          "example": false,
+          "type": [
+            "boolean"
+          ]
+        }
+      },
+      "links": [
+        {
+          "description": "Create a new organization app. Use this endpoint instead of the `/apps` endpoint when you want to create an app that will be owned by an organization in which you are a member, rather than your personal account.",
+          "href": "/organizations/{(%23%2Fdefinitions%2Forganization%2Fdefinitions%2Fidentity)}/apps",
+          "method": "POST",
+          "rel": "create",
+          "schema": {
+            "properties": {
+              "locked": {
+                "$ref": "#/definitions/organization-app/definitions/locked"
+              },
+              "name": {
+                "$ref": "#/definitions/app/definitions/name"
+              },
+              "region": {
+                "$ref": "#/definitions/region/definitions/name"
+              },
+              "stack": {
+                "$ref": "#/definitions/stack/definitions/name"
+              }
+            },
+            "type": [
+              "object"
+            ]
+          },
+          "title": "Create"
+        },
+        {
+          "description": "List organization apps.",
+          "href": "/organizations/{(%23%2Fdefinitions%2Forganization%2Fdefinitions%2Fidentity)}/apps",
+          "method": "GET",
+          "rel": "instances",
+          "title": "List"
+        },
+        {
+          "description": "Lock or unlock an organization app.",
+          "href": "/organizations/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}",
+          "method": "PATCH",
+          "rel": "update",
+          "schema": {
+            "properties": {
+              "locked": {
+                "$ref": "#/definitions/organization-app/definitions/locked"
+              }
+            },
+            "required": [
+              "locked"
+            ],
+            "type": [
+              "object"
+            ]
+          },
+          "title": "Update Locked"
+        },
+        {
+          "description": "Transfer an existing organization app to another Heroku account.",
+          "href": "/organizations/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}",
+          "method": "PATCH",
+          "rel": "update",
+          "schema": {
+            "properties": {
+              "owner": {
+                "$ref": "#/definitions/account/definitions/identity"
+              }
+            },
+            "required": [
+              "owner"
+            ],
+            "type": [
+              "object"
+            ]
+          },
+          "title": "Transfer to Account"
+        },
+        {
+          "description": "Transfer an existing organization app to another organization.",
+          "href": "/organizations/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}",
+          "method": "PATCH",
+          "rel": "update",
+          "schema": {
+            "properties": {
+              "owner": {
+                "$ref": "#/definitions/organization/definitions/name"
+              }
+            },
+            "required": [
+              "owner"
+            ],
+            "type": [
+              "object"
+            ]
+          },
+          "title": "Transfer to Organization"
+        }
+      ],
+      "properties": {
+        "archived_at": {
+          "$ref": "#/definitions/app/definitions/archived_at"
+        },
+        "buildpack_provided_description": {
+          "$ref": "#/definitions/app/definitions/buildpack_provided_description"
+        },
+        "created_at": {
+          "$ref": "#/definitions/app/definitions/created_at"
+        },
+        "git_url": {
+          "$ref": "#/definitions/app/definitions/git_url"
+        },
+        "id": {
+          "$ref": "#/definitions/app/definitions/id"
+        },
+        "joined": {
+          "$ref": "#/definitions/organization-app/definitions/joined"
+        },
+        "locked": {
+          "$ref": "#/definitions/organization-app/definitions/locked"
+        },
+        "maintenance": {
+          "$ref": "#/definitions/app/definitions/maintenance"
+        },
+        "name": {
+          "$ref": "#/definitions/app/definitions/name"
+        },
+        "owner": {
+          "description": "identity of app owner",
+          "properties": {
+            "email": {
+              "$ref": "#/definitions/account/definitions/email"
+            },
+            "id": {
+              "$ref": "#/definitions/account/definitions/id"
+            }
+          },
+          "type": [
+            "object"
+          ]
+        },
+        "region": {
+          "description": "identity of app region",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/region/definitions/id"
+            },
+            "name": {
+              "$ref": "#/definitions/region/definitions/name"
+            }
+          },
+          "type": [
+            "object"
+          ]
+        },
+        "released_at": {
+          "$ref": "#/definitions/app/definitions/released_at"
+        },
+        "repo_size": {
+          "$ref": "#/definitions/app/definitions/repo_size"
+        },
+        "slug_size": {
+          "$ref": "#/definitions/app/definitions/slug_size"
+        },
+        "stack": {
+          "description": "identity of app stack",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/stack/definitions/id"
+            },
+            "name": {
+              "$ref": "#/definitions/stack/definitions/name"
+            }
+          },
+          "type": [
+            "object"
+          ]
+        },
+        "updated_at": {
+          "$ref": "#/definitions/app/definitions/updated_at"
+        },
+        "web_url": {
+          "$ref": "#/definitions/app/definitions/web_url"
+        }
+      }
+    },
+    "organization-member": {
+      "$schema": "http://json-schema.org/draft-04/hyper-schema",
+      "description": "An organization member is an individual with access to an organization.",
+      "id": "schemata/organization-member",
+      "stability": "prototype",
+      "title": "Heroku Platform API - Organization Member",
+      "type": [
+        "object"
+      ],
+      "definitions": {
+        "created_at": {
+          "description": "when organization-member was created",
+          "example": "2012-01-01T12:00:00Z",
+          "format": "date-time",
+          "readOnly": true,
+          "type": [
+            "string"
+          ]
+        },
+        "email": {
+          "description": "email address of the organization member",
+          "example": "someone@example.org",
+          "readOnly": true,
+          "type": [
+            "string"
+          ]
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/organization-member/definitions/email"
+            }
+          ]
+        },
+        "updated_at": {
+          "description": "when organization-member was updated",
+          "example": "2012-01-01T12:00:00Z",
+          "format": "date-time",
+          "readOnly": true,
+          "type": [
+            "string"
+          ]
+        }
+      },
+      "links": [
+        {
+          "description": "Create a new organization member, or update their role.",
+          "href": "/organizations/{(%23%2Fdefinitions%2Forganization%2Fdefinitions%2Fidentity)}/members",
+          "method": "PUT",
+          "rel": "create",
+          "schema": {
+            "properties": {
+              "email": {
+                "$ref": "#/definitions/organization-member/definitions/email"
+              },
+              "role": {
+                "$ref": "#/definitions/organization/definitions/role"
+              }
+            },
+            "required": [
+              "email",
+              "role"
+            ],
+            "type": [
+              "object"
+            ]
+          },
+          "title": "Create or Update"
+        },
+        {
+          "description": "Remove a member from the organization.",
+          "href": "/organizations/{(%23%2Fdefinitions%2Forganization%2Fdefinitions%2Fidentity)}/members/{(%23%2Fdefinitions%2Forganization-member%2Fdefinitions%2Fidentity)}",
+          "method": "DELETE",
+          "rel": "destroy",
+          "title": "Delete"
+        },
+        {
+          "description": "List members of the organization.",
+          "href": "/organizations/{(%23%2Fdefinitions%2Forganization%2Fdefinitions%2Fidentity)}/members",
+          "method": "GET",
+          "rel": "instances",
+          "title": "List"
+        }
+      ],
+      "properties": {
+        "created_at": {
+          "$ref": "#/definitions/organization-member/definitions/created_at"
+        },
+        "email": {
+          "$ref": "#/definitions/organization-member/definitions/email"
+        },
+        "role": {
+          "$ref": "#/definitions/organization/definitions/role"
+        },
+        "updated_at": {
+          "$ref": "#/definitions/organization-member/definitions/updated_at"
+        }
+      }
+    },
+    "organization": {
+      "$schema": "http://json-schema.org/draft-04/hyper-schema",
+      "description": "Organizations allow you to manage access to a shared group of applications across your development team.",
+      "id": "schemata/organization",
+      "stability": "prototype",
+      "title": "Heroku Platform API - Organization",
+      "type": [
+        "object"
+      ],
+      "definitions": {
+        "credit_card_collections": {
+          "description": "whether charges incurred by the org are paid by credit card.",
+          "example": "true",
+          "readOnly": true,
+          "type": [
+            "boolean"
+          ]
+        },
+        "default": {
+          "description": "whether to use this organization when none is specified",
+          "example": "true",
+          "readOnly": false,
+          "type": [
+            "boolean"
+          ]
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/organization/definitions/name"
+            }
+          ]
+        },
+        "name": {
+          "description": "unique name of organization",
+          "example": "example",
+          "readOnly": true,
+          "type": [
+            "string"
+          ]
+        },
+        "provisioned_licenses": {
+          "description": "whether the org is provisioned licenses by salesforce.",
+          "example": "true",
+          "readOnly": true,
+          "type": [
+            "boolean"
+          ]
+        },
+        "role": {
+          "description": "role in the organization",
+          "enum": [
+            "admin",
+            "member",
+            "collaborator"
+          ],
+          "example": "admin",
+          "readOnly": true,
+          "type": [
+            "string"
+          ]
+        }
+      },
+      "links": [
+        {
+          "description": "List organizations in which you are a member.",
+          "href": "/organizations",
+          "method": "GET",
+          "rel": "instances",
+          "title": "List"
+        },
+        {
+          "description": "Set or Unset the organization as your default organization.",
+          "href": "/organizations/{(%23%2Fdefinitions%2Forganization%2Fdefinitions%2Fidentity)}",
+          "method": "PATCH",
+          "rel": "update",
+          "schema": {
+            "properties": {
+              "default": {
+                "$ref": "#/definitions/organization/definitions/default"
+              }
+            },
+            "type": [
+              "object"
+            ]
+          },
+          "title": "Update"
+        }
+      ],
+      "properties": {
+        "credit_card_collections": {
+          "$ref": "#/definitions/organization/definitions/credit_card_collections"
+        },
+        "default": {
+          "$ref": "#/definitions/organization/definitions/default"
+        },
+        "name": {
+          "$ref": "#/definitions/organization/definitions/name"
+        },
+        "provisioned_licenses": {
+          "$ref": "#/definitions/organization/definitions/provisioned_licenses"
+        },
+        "role": {
+          "$ref": "#/definitions/organization/definitions/role"
+        }
+      }
+    },
     "plan": {
       "description": "Plans represent different configurations of add-ons that may be added to apps.",
       "id": "schemata/plan",
@@ -4067,6 +4568,18 @@
     },
     "oauth-token": {
       "$ref": "#/definitions/oauth-token"
+    },
+    "organization-app-collaborator": {
+      "$ref": "#/definitions/organization-app-collaborator"
+    },
+    "organization-app": {
+      "$ref": "#/definitions/organization-app"
+    },
+    "organization-member": {
+      "$ref": "#/definitions/organization-member"
+    },
+    "organization": {
+      "$ref": "#/definitions/organization"
     },
     "plan": {
       "$ref": "#/definitions/plan"
