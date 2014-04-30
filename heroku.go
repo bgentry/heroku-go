@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	Version          = "0.6.0"
+	Version          = "0.7.0"
 	DefaultAPIURL    = "https://api.heroku.com"
 	DefaultUserAgent = "heroku-go/" + Version + " (" + runtime.GOOS + "; " + runtime.GOARCH + ")"
 )
