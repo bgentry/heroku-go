@@ -39,8 +39,6 @@ type Account struct {
 }
 
 // Info for account.
-//
-// accountIdentity is the unique identifier of the Account.
 func (c *Client) AccountInfo() (*Account, error) {
 	var account Account
 	return &account, c.Get(&account, "/account")
@@ -48,9 +46,8 @@ func (c *Client) AccountInfo() (*Account, error) {
 
 // Update account.
 //
-// accountIdentity is the unique identifier of the Account. password is the
-// current password on the account. options is the struct of optional parameters
-// for this action.
+// password is the current password on the account. options is the struct of
+// optional parameters for this action.
 func (c *Client) AccountUpdate(password string, options *AccountUpdateOpts) (*Account, error) {
 	params := struct {
 		Password      string  `json:"password"`
@@ -81,9 +78,8 @@ type AccountUpdateOpts struct {
 
 // Change Email for account.
 //
-// accountIdentity is the unique identifier of the Account. password is the
-// current password on the account. email is the unique email address of
-// account.
+// password is the current password on the account. email is the unique email
+// address of account.
 func (c *Client) AccountChangeEmail(password string, email string) (*Account, error) {
 	params := struct {
 		Password string `json:"password"`
@@ -98,9 +94,8 @@ func (c *Client) AccountChangeEmail(password string, email string) (*Account, er
 
 // Change Password for account.
 //
-// accountIdentity is the unique identifier of the Account. newPassword is the
-// the new password for the account when changing the password. password is the
-// current password on the account.
+// newPassword is the the new password for the account when changing the
+// password. password is the current password on the account.
 func (c *Client) AccountChangePassword(newPassword string, password string) (*Account, error) {
 	params := struct {
 		NewPassword string `json:"new_password"`

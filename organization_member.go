@@ -25,9 +25,10 @@ type OrganizationMember struct {
 
 // Create a new organization member, or update their role.
 //
-// email is the email address of the organization member. role is the role in
-// the organization.
-func (c *Client) OrganizationMemberCreateOrUpdate(email string, role string) (*OrganizationMember, error) {
+// organizationIdentity is the unique identifier of the OrganizationMember's
+// Organization. email is the email address of the organization member. role is
+// the role in the organization.
+func (c *Client) OrganizationMemberCreateOrUpdate(organizationIdentity string, email string, role string) (*OrganizationMember, error) {
 	params := struct {
 		Email string `json:"email"`
 		Role  string `json:"role"`
@@ -36,23 +37,25 @@ func (c *Client) OrganizationMemberCreateOrUpdate(email string, role string) (*O
 		Role:  role,
 	}
 	var organizationMemberRes OrganizationMember
-	return &organizationMemberRes, c.Post(&organizationMemberRes, "/organizations/{(%23%2Fdefinitions%2Forganization%2Fdefinitions%2Fidentity)}/members", params)
+	return &organizationMemberRes, c.Post(&organizationMemberRes, "/organizations/"+organizationIdentity+"/members", params)
 }
 
 // Remove a member from the organization.
 //
-// organizationMemberIdentity is the unique identifier of the
+// organizationIdentity is the unique identifier of the OrganizationMember's
+// Organization. organizationMemberIdentity is the unique identifier of the
 // OrganizationMember.
-func (c *Client) OrganizationMemberDelete(organizationMemberIdentity string) error {
-	return c.Delete("/organizations/{(%23%2Fdefinitions%2Forganization%2Fdefinitions%2Fidentity)}/members/" + organizationMemberIdentity)
+func (c *Client) OrganizationMemberDelete(organizationIdentity string, organizationMemberIdentity string) error {
+	return c.Delete("/organizations/" + organizationIdentity + "/members/" + organizationIdentity)
 }
 
 // List members of the organization.
 //
-// lr is an optional ListRange that sets the Range options for the paginated
-// list of results.
-func (c *Client) OrganizationMemberList(lr *ListRange) ([]OrganizationMember, error) {
-	req, err := c.NewRequest("GET", "/organizations/{(%23%2Fdefinitions%2Forganization%2Fdefinitions%2Fidentity)}/members", nil)
+// organizationIdentity is the unique identifier of the OrganizationMember's
+// Organization. lr is an optional ListRange that sets the Range options for the
+// paginated list of results.
+func (c *Client) OrganizationMemberList(organizationIdentity string, lr *ListRange) ([]OrganizationMember, error) {
+	req, err := c.NewRequest("GET", "/organizations/"+organizationIdentity+"/members", nil)
 	if err != nil {
 		return nil, err
 	}

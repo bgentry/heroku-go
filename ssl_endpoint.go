@@ -33,7 +33,7 @@ type SSLEndpoint struct {
 
 // Create a new SSL endpoint.
 //
-// appIdentity is the unique identifier of the ssl-endpoint's app.
+// appIdentity is the unique identifier of the SSLEndpoint's App.
 // certificateChain is the raw contents of the public certificate chain (eg:
 // .crt or .pem file). privateKey is the contents of the private key (eg .key
 // file). options is the struct of optional parameters for this action.
@@ -61,7 +61,7 @@ type SSLEndpointCreateOpts struct {
 
 // Delete existing SSL endpoint.
 //
-// appIdentity is the unique identifier of the ssl-endpoint's app.
+// appIdentity is the unique identifier of the SSLEndpoint's App.
 // sslEndpointIdentity is the unique identifier of the SSLEndpoint.
 func (c *Client) SSLEndpointDelete(appIdentity string, sslEndpointIdentity string) error {
 	return c.Delete("/apps/" + appIdentity + "/ssl-endpoints/" + sslEndpointIdentity)
@@ -69,7 +69,7 @@ func (c *Client) SSLEndpointDelete(appIdentity string, sslEndpointIdentity strin
 
 // Info for existing SSL endpoint.
 //
-// appIdentity is the unique identifier of the ssl-endpoint's app.
+// appIdentity is the unique identifier of the SSLEndpoint's App.
 // sslEndpointIdentity is the unique identifier of the SSLEndpoint.
 func (c *Client) SSLEndpointInfo(appIdentity string, sslEndpointIdentity string) (*SSLEndpoint, error) {
 	var sslEndpoint SSLEndpoint
@@ -78,7 +78,7 @@ func (c *Client) SSLEndpointInfo(appIdentity string, sslEndpointIdentity string)
 
 // List existing SSL endpoints.
 //
-// appIdentity is the unique identifier of the ssl-endpoint's app. lr is an
+// appIdentity is the unique identifier of the SSLEndpoint's App. lr is an
 // optional ListRange that sets the Range options for the paginated list of
 // results.
 func (c *Client) SSLEndpointList(appIdentity string, lr *ListRange) ([]SSLEndpoint, error) {
@@ -97,7 +97,7 @@ func (c *Client) SSLEndpointList(appIdentity string, lr *ListRange) ([]SSLEndpoi
 
 // Update an existing SSL endpoint.
 //
-// appIdentity is the unique identifier of the ssl-endpoint's app.
+// appIdentity is the unique identifier of the SSLEndpoint's App.
 // sslEndpointIdentity is the unique identifier of the SSLEndpoint. options is
 // the struct of optional parameters for this action.
 func (c *Client) SSLEndpointUpdate(appIdentity string, sslEndpointIdentity string, options *SSLEndpointUpdateOpts) (*SSLEndpoint, error) {

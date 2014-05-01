@@ -41,7 +41,7 @@ type Slug struct {
 
 // Info for existing slug.
 //
-// appIdentity is the unique identifier of the slug's app. slugIdentity is the
+// appIdentity is the unique identifier of the Slug's App. slugIdentity is the
 // unique identifier of the Slug.
 func (c *Client) SlugInfo(appIdentity string, slugIdentity string) (*Slug, error) {
 	var slug Slug
@@ -51,7 +51,7 @@ func (c *Client) SlugInfo(appIdentity string, slugIdentity string) (*Slug, error
 // Create a new slug. For more information please refer to Deploying Slugs using
 // the Platform API.
 //
-// appIdentity is the unique identifier of the slug's app. processTypes is the
+// appIdentity is the unique identifier of the Slug's App. processTypes is the
 // hash mapping process type names to their respective command. options is the
 // struct of optional parameters for this action.
 func (c *Client) SlugCreate(appIdentity string, processTypes map[string]string, options *SlugCreateOpts) (*Slug, error) {

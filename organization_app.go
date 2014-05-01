@@ -76,10 +76,11 @@ type OrganizationApp struct {
 // endpoint when you want to create an app that will be owned by an organization
 // in which you are a member, rather than your personal account.
 //
-// options is the struct of optional parameters for this action.
-func (c *Client) OrganizationAppCreate(options *OrganizationAppCreateOpts) (*OrganizationApp, error) {
+// organizationIdentity is the unique identifier of the OrganizationApp's
+// Organization. options is the struct of optional parameters for this action.
+func (c *Client) OrganizationAppCreate(organizationIdentity string, options *OrganizationAppCreateOpts) (*OrganizationApp, error) {
 	var organizationAppRes OrganizationApp
-	return &organizationAppRes, c.Post(&organizationAppRes, "/organizations/{(%23%2Fdefinitions%2Forganization%2Fdefinitions%2Fidentity)}/apps", options)
+	return &organizationAppRes, c.Post(&organizationAppRes, "/organizations/"+organizationIdentity+"/apps", options)
 }
 
 // OrganizationAppCreateOpts holds the optional parameters for OrganizationAppCreate
@@ -96,10 +97,11 @@ type OrganizationAppCreateOpts struct {
 
 // List organization apps.
 //
-// lr is an optional ListRange that sets the Range options for the paginated
-// list of results.
-func (c *Client) OrganizationAppList(lr *ListRange) ([]OrganizationApp, error) {
-	req, err := c.NewRequest("GET", "/organizations/{(%23%2Fdefinitions%2Forganization%2Fdefinitions%2Fidentity)}/apps", nil)
+// organizationIdentity is the unique identifier of the OrganizationApp's
+// Organization. lr is an optional ListRange that sets the Range options for the
+// paginated list of results.
+func (c *Client) OrganizationAppList(organizationIdentity string, lr *ListRange) ([]OrganizationApp, error) {
+	req, err := c.NewRequest("GET", "/organizations/"+organizationIdentity+"/apps", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -114,43 +116,42 @@ func (c *Client) OrganizationAppList(lr *ListRange) ([]OrganizationApp, error) {
 
 // Lock or unlock an organization app.
 //
-// organizationAppIdentity is the unique identifier of the OrganizationApp.
-// locked is the are other organization members forbidden from joining this app.
-func (c *Client) OrganizationAppUpdateLocked(locked bool) (*OrganizationApp, error) {
+// appIdentity is the unique identifier of the OrganizationApp's App. locked is
+// the are other organization members forbidden from joining this app.
+func (c *Client) OrganizationAppUpdateLocked(appIdentity string, locked bool) (*OrganizationApp, error) {
 	params := struct {
 		Locked bool `json:"locked"`
 	}{
 		Locked: locked,
 	}
 	var organizationAppRes OrganizationApp
-	return &organizationAppRes, c.Patch(&organizationAppRes, "/organizations/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}", params)
+	return &organizationAppRes, c.Patch(&organizationAppRes, "/organizations/apps/"+appIdentity, params)
 }
 
 // Transfer an existing organization app to another Heroku account.
 //
-// organizationAppIdentity is the unique identifier of the OrganizationApp.
-// owner is the unique email address of account or unique identifier of an
-// account.
-func (c *Client) OrganizationAppTransferToAccount(owner string) (*OrganizationApp, error) {
+// appIdentity is the unique identifier of the OrganizationApp's App. owner is
+// the unique email address of account or unique identifier of an account.
+func (c *Client) OrganizationAppTransferToAccount(appIdentity string, owner string) (*OrganizationApp, error) {
 	params := struct {
 		Owner string `json:"owner"`
 	}{
 		Owner: owner,
 	}
 	var organizationAppRes OrganizationApp
-	return &organizationAppRes, c.Patch(&organizationAppRes, "/organizations/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}", params)
+	return &organizationAppRes, c.Patch(&organizationAppRes, "/organizations/apps/"+appIdentity, params)
 }
 
 // Transfer an existing organization app to another organization.
 //
-// organizationAppIdentity is the unique identifier of the OrganizationApp.
-// owner is the unique name of organization.
-func (c *Client) OrganizationAppTransferToOrganization(owner string) (*OrganizationApp, error) {
+// appIdentity is the unique identifier of the OrganizationApp's App. owner is
+// the unique name of organization.
+func (c *Client) OrganizationAppTransferToOrganization(appIdentity string, owner string) (*OrganizationApp, error) {
 	params := struct {
 		Owner string `json:"owner"`
 	}{
 		Owner: owner,
 	}
 	var organizationAppRes OrganizationApp
-	return &organizationAppRes, c.Patch(&organizationAppRes, "/organizations/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}", params)
+	return &organizationAppRes, c.Patch(&organizationAppRes, "/organizations/apps/"+appIdentity, params)
 }

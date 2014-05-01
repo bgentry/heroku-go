@@ -46,7 +46,7 @@ type Dyno struct {
 
 // Create a new dyno.
 //
-// appIdentity is the unique identifier of the dyno's app. command is the
+// appIdentity is the unique identifier of the Dyno's App. command is the
 // command used to start this process. options is the struct of optional
 // parameters for this action.
 func (c *Client) DynoCreate(appIdentity string, command string, options *DynoCreateOpts) (*Dyno, error) {
@@ -79,7 +79,7 @@ type DynoCreateOpts struct {
 
 // Restart dyno.
 //
-// appIdentity is the unique identifier of the dyno's app. dynoIdentity is the
+// appIdentity is the unique identifier of the Dyno's App. dynoIdentity is the
 // unique identifier of the Dyno.
 func (c *Client) DynoRestart(appIdentity string, dynoIdentity string) error {
 	return c.Delete("/apps/" + appIdentity + "/dynos/" + dynoIdentity)
@@ -87,15 +87,14 @@ func (c *Client) DynoRestart(appIdentity string, dynoIdentity string) error {
 
 // Restart all dynos
 //
-// appIdentity is the unique identifier of the dyno's app. dynoIdentity is the
-// unique identifier of the Dyno.
+// appIdentity is the unique identifier of the Dyno's App.
 func (c *Client) DynoRestartAll(appIdentity string) error {
 	return c.Delete("/apps/" + appIdentity + "/dynos")
 }
 
 // Info for existing dyno.
 //
-// appIdentity is the unique identifier of the dyno's app. dynoIdentity is the
+// appIdentity is the unique identifier of the Dyno's App. dynoIdentity is the
 // unique identifier of the Dyno.
 func (c *Client) DynoInfo(appIdentity string, dynoIdentity string) (*Dyno, error) {
 	var dyno Dyno
@@ -104,7 +103,7 @@ func (c *Client) DynoInfo(appIdentity string, dynoIdentity string) (*Dyno, error
 
 // List existing dynos.
 //
-// appIdentity is the unique identifier of the dyno's app. lr is an optional
+// appIdentity is the unique identifier of the Dyno's App. lr is an optional
 // ListRange that sets the Range options for the paginated list of results.
 func (c *Client) DynoList(appIdentity string, lr *ListRange) ([]Dyno, error) {
 	req, err := c.NewRequest("GET", "/apps/"+appIdentity+"/dynos", nil)

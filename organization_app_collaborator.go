@@ -36,8 +36,8 @@ type OrganizationAppCollaborator struct {
 // (https://devcenter.heroku.com/articles/org-users-access#roles) according to
 // their role in the organization.
 //
-// appIdentity is the unique identifier of the organization-app-collaborator's
-// app. user is the unique email address of account or unique identifier of an
+// appIdentity is the unique identifier of the OrganizationAppCollaborator's
+// App. user is the unique email address of account or unique identifier of an
 // account. options is the struct of optional parameters for this action.
 func (c *Client) OrganizationAppCollaboratorCreate(appIdentity string, user string, options *OrganizationAppCollaboratorCreateOpts) (*OrganizationAppCollaborator, error) {
 	params := struct {
@@ -61,27 +61,27 @@ type OrganizationAppCollaboratorCreateOpts struct {
 
 // Delete an existing collaborator from an organization app.
 //
-// appIdentity is the unique identifier of the organization-app-collaborator's
-// app. organizationAppCollaboratorIdentity is the unique identifier of the
-// OrganizationAppCollaborator.
-func (c *Client) OrganizationAppCollaboratorDelete(appIdentity string) error {
-	return c.Delete("/organizations/apps/" + appIdentity + "/collaborators/{(%23%2Fdefinitions%2Fcollaborator%2Fdefinitions%2Fidentity)}")
+// appIdentity is the unique identifier of the OrganizationAppCollaborator's
+// App. collaboratorIdentity is the unique identifier of the
+// OrganizationAppCollaborator's Collaborator.
+func (c *Client) OrganizationAppCollaboratorDelete(appIdentity string, collaboratorIdentity string) error {
+	return c.Delete("/organizations/apps/" + appIdentity + "/collaborators/" + collaboratorIdentity)
 }
 
 // Info for a collaborator on an organization app.
 //
-// appIdentity is the unique identifier of the organization-app-collaborator's
-// app. organizationAppCollaboratorIdentity is the unique identifier of the
-// OrganizationAppCollaborator.
-func (c *Client) OrganizationAppCollaboratorInfo(appIdentity string) (*OrganizationAppCollaborator, error) {
+// appIdentity is the unique identifier of the OrganizationAppCollaborator's
+// App. collaboratorIdentity is the unique identifier of the
+// OrganizationAppCollaborator's Collaborator.
+func (c *Client) OrganizationAppCollaboratorInfo(appIdentity string, collaboratorIdentity string) (*OrganizationAppCollaborator, error) {
 	var organizationAppCollaborator OrganizationAppCollaborator
-	return &organizationAppCollaborator, c.Get(&organizationAppCollaborator, "/organizations/apps/"+appIdentity+"/collaborators/{(%23%2Fdefinitions%2Fcollaborator%2Fdefinitions%2Fidentity)}")
+	return &organizationAppCollaborator, c.Get(&organizationAppCollaborator, "/organizations/apps/"+appIdentity+"/collaborators/"+collaboratorIdentity)
 }
 
 // List collaborators on an organization app.
 //
-// appIdentity is the unique identifier of the organization-app-collaborator's
-// app. lr is an optional ListRange that sets the Range options for the
+// appIdentity is the unique identifier of the OrganizationAppCollaborator's
+// App. lr is an optional ListRange that sets the Range options for the
 // paginated list of results.
 func (c *Client) OrganizationAppCollaboratorList(appIdentity string, lr *ListRange) ([]OrganizationAppCollaborator, error) {
 	req, err := c.NewRequest("GET", "/organizations/apps/"+appIdentity+"/collaborators", nil)
