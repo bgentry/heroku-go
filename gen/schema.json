@@ -3234,6 +3234,13 @@
           "title": "List"
         },
         {
+          "description": "Info for an organization app.",
+          "href": "/organizations/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}",
+          "method": "GET",
+          "rel": "self",
+          "title": "Info"
+        },
+        {
           "description": "Lock or unlock an organization app.",
           "href": "/organizations/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}",
           "method": "PATCH",
@@ -3322,14 +3329,11 @@
         "name": {
           "$ref": "#/definitions/app/definitions/name"
         },
-        "owner": {
-          "description": "identity of app owner",
+        "organization": {
+          "description": "organization that owns this app",
           "properties": {
-            "email": {
-              "$ref": "#/definitions/account/definitions/email"
-            },
-            "id": {
-              "$ref": "#/definitions/account/definitions/id"
+            "name": {
+              "$ref": "#/definitions/organization/definitions/name"
             }
           },
           "type": [
