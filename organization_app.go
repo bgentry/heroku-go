@@ -39,7 +39,7 @@ type OrganizationApp struct {
 	Name string `json:"name"`
 
 	// organization that owns this app
-	Organization struct {
+	Organization *struct {
 		Name string `json:"name"`
 	} `json:"organization"`
 
