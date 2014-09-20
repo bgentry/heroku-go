@@ -138,7 +138,7 @@ func (c *Client) NewRequest(method, path string, body interface{}) (*http.Reques
 	}
 	// If we're talking to heroku-agent over a local Unix socket, downgrade to
 	// HTTP; heroku-agent will establish a secure connection between itself and
-	// the Heorku API.
+	// the Heroku API.
 	if c.HerokuAgentSocket != "" {
 		req.URL.Scheme = "http"
 	}
