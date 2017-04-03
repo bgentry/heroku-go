@@ -46,7 +46,7 @@ func (c *Client) OrganizationMemberCreateOrUpdate(organizationIdentity string, e
 // Organization. organizationMemberIdentity is the unique identifier of the
 // OrganizationMember.
 func (c *Client) OrganizationMemberDelete(organizationIdentity string, organizationMemberIdentity string) error {
-	return c.Delete("/organizations/" + organizationIdentity + "/members/" + organizationIdentity)
+	return c.Delete("/organizations/" + organizationIdentity + "/members/" + organizationMemberIdentity)
 }
 
 // List members of the organization.
